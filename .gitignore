@@ -1,0 +1,16 @@
+.env
+.venv/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
+*.egg-info/
+.pytest_cache/
+kamik_pg_data/
+uploads/
+*.xlsx
+*.csv
+!demo-data/

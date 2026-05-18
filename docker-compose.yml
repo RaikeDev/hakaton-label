@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kamik-db
+    environment:
+      POSTGRES_DB: kamik
+      POSTGRES_USER: kamik
+      POSTGRES_PASSWORD: kamik
+    ports:
+      - "5433:5432"
+    volumes:
+      - kamik_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kamik"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: kamik-backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://kamik:kamik@db:5432/kamik
+      CORS_ORIGINS: http://localhost:5173
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - ./demo-data:/app/demo-data
+
+volumes:
+  kamik_pg_data:

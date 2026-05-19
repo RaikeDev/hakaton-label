@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+import axios from "axios";
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 export function LoginPage() {
@@ -8,22 +9,43 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  function resolveLoginError(error: unknown) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 401) return "Неверный email или пароль";
+      if (!error.response) return "Не удалось подключиться к backend. Проверьте адрес API и CORS.";
+    }
+
+    return "Не удалось выполнить вход. Повторите попытку.";
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
-    } catch {
-      setError("Неверный email или пароль");
+      await login(email, password.trim());
+    } catch (error) {
+      setError(resolveLoginError(error));
     } finally {
       setLoading(false);
     }
   }
 
-  function quickLogin(role: "artist" | "admin") {
-    setEmail(role === "artist" ? "artist@kamik.ru" : "admin@kamik.ru");
-    setPassword(role === "artist" ? "artist123" : "admin123");
+  async function quickLogin(role: "artist" | "admin") {
+    const demoEmail = role === "artist" ? "artist@kamik.ru" : "admin@kamik.ru";
+    const demoPassword = role === "artist" ? "artist123" : "admin123";
+
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setError("");
+    setLoading(true);
+    try {
+      await login(demoEmail, demoPassword);
+    } catch (error) {
+      setError(resolveLoginError(error));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -31,12 +53,10 @@ export function LoginPage() {
       className="flex items-center justify-center min-h-screen relative overflow-hidden"
       style={{ background: "#06050F", color: "#E5E7EB" }}
     >
-      {/* Background glow effects */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-violet-600/8 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-fuchsia-600/6 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-sm relative z-10">
-        {/* Logo */}
         <div className="flex items-center gap-3 mb-8 justify-center">
           <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-[0_0_24px_rgba(139,92,246,0.45)]">
             <span className="text-white font-black text-base tracking-wider">K</span>
@@ -74,9 +94,7 @@ export function LoginPage() {
               />
             </div>
 
-            {error && (
-              <p className="text-red-400 text-sm text-center">{error}</p>
-            )}
+            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
             <button
               type="submit"
@@ -87,19 +105,20 @@ export function LoginPage() {
             </button>
           </form>
 
-          {/* Quick login buttons for demo */}
           <div className="mt-5 pt-4 border-t border-[#1C1A3B]">
             <p className="text-[#4A4469] text-xs text-center mb-3">Быстрый вход для демо</p>
             <div className="flex gap-2">
               <button
                 onClick={() => quickLogin("artist")}
-                className="flex-1 text-xs bg-[#0F0D22] border border-[#1C1A3B] hover:border-violet-500 text-[#9B98BC] hover:text-white rounded-lg py-2 transition-colors"
+                disabled={loading}
+                className="flex-1 text-xs bg-[#0F0D22] border border-[#1C1A3B] hover:border-violet-500 text-[#9B98BC] hover:text-white rounded-lg py-2 transition-colors disabled:opacity-50"
               >
                 Артист MAKO
               </button>
               <button
                 onClick={() => quickLogin("admin")}
-                className="flex-1 text-xs bg-[#0F0D22] border border-[#1C1A3B] hover:border-emerald-500 text-[#9B98BC] hover:text-white rounded-lg py-2 transition-colors"
+                disabled={loading}
+                className="flex-1 text-xs bg-[#0F0D22] border border-[#1C1A3B] hover:border-emerald-500 text-[#9B98BC] hover:text-white rounded-lg py-2 transition-colors disabled:opacity-50"
               >
                 Админ лейбла
               </button>

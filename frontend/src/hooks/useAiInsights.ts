@@ -10,5 +10,6 @@ export function useAiInsights() {
   return useQuery({
     queryKey: ["ai-insights", artistId],
     queryFn: () => fetchAiInsights(artistId),
+    staleTime: 60_000,
   });
 }

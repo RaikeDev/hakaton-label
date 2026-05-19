@@ -10,6 +10,7 @@ import {
   Disc3,
   Users,
   ArrowLeftRight,
+  Search,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -74,6 +75,14 @@ export function Sidebar({ active, onNavigate }: SidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 mt-4 space-y-0.5 overflow-y-auto">
+        <button
+  onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#9CA3AF] hover:text-white hover:bg-[#1A1A2E] transition-all group mb-2"
+>
+  <Search size={17} className="text-[#6B7280] group-hover:text-[#9CA3AF]" />
+  <span className="font-medium">Поиск</span>
+  <kbd className="ml-auto text-xs px-1.5 py-0.5 rounded bg-[#1E1E35] text-[#6B7280]">Ctrl+K</kbd>
+</button>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = active === item.id;

@@ -1,4 +1,5 @@
-﻿import {
+﻿import { useState } from "react";
+import {
   BarChart,
   Bar,
   AreaChart,
@@ -8,9 +9,6 @@
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
 } from "recharts";
 import { TrendingUp, TrendingDown, Globe, Users, Radio } from "lucide-react";
 import { useAnalytics } from "../../hooks/useAnalytics";
@@ -55,11 +53,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function Analytics() {
+  const [period, setPeriod] = useState<7 | 30 | 90>(30);
   const { data: analyticsData, isLoading } = useAnalytics();
   const { data: dashData } = useDashboard();
-  const monthlyRevenue: any[] = dashData?.monthly_revenue ?? [];
 
-  const streamsByPlatform: any[] = (analyticsData?.platforms ?? []).map((p: any, i: number) => ({
+  const allMonths: any[] = dashData?.monthly_revenue ?? [];
+  const monthlyRevenue = period === 90 ? allMonths : period === 30 ? allMonths.slice(-3) : allMonths.slice(-1);
+
+  const streamsByPlatform: any[] = (analyticsData?.platforms ?? []).map((p: any) => ({
     name: p.platform,
     streams: p.streams,
     revenue: p.revenue,
@@ -71,9 +72,30 @@ export function Analytics() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-white">Аналитика</h1>
-        <p className="text-[#6C6890] text-sm mt-0.5">Данные по всем платформам · Февраль 2025</p>
+
+      {/* Header + Period filter */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-white">Аналитика</h1>
+          <p className="text-[#6C6890] text-sm mt-0.5">
+            Данные по всем платформам · последние {period === 90 ? "3 месяца" : `${period} дней`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {([7, 30, 90] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                period === p
+                  ? "bg-violet-600 text-white"
+                  : "bg-[#0F0D22] border border-[#1C1A3B] text-[#6C6890] hover:text-white"
+              }`}
+            >
+              {p === 7 ? "7 дней" : p === 30 ? "30 дней" : "3 месяца"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* KPI row */}
@@ -106,7 +128,6 @@ export function Analytics() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Monthly revenue detailed */}
         <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
           <h2 className="text-white font-semibold mb-1">Доход по месяцам</h2>
           <p className="text-[#6C6890] text-xs mb-4">Все платформы · руб.</p>
@@ -116,7 +137,7 @@ export function Analytics() {
               <XAxis dataKey="month" tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="yandex" name="Яндекс" stackId="a" fill={PLATFORM_COLORS.yandex} radius={[0, 0, 0, 0]} />
+              <Bar dataKey="yandex" name="Яндекс" stackId="a" fill={PLATFORM_COLORS.yandex} />
               <Bar dataKey="vk" name="VK" stackId="a" fill={PLATFORM_COLORS.vk} />
               <Bar dataKey="spotify" name="Spotify" stackId="a" fill={PLATFORM_COLORS.spotify} />
               <Bar dataKey="sber" name="СберЗвук" stackId="a" fill={PLATFORM_COLORS.sber} />
@@ -125,7 +146,6 @@ export function Analytics() {
           </ResponsiveContainer>
         </div>
 
-        {/* Monthly streams */}
         <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
           <h2 className="text-white font-semibold mb-1">Прослушивания по месяцам</h2>
           <p className="text-[#6C6890] text-xs mb-4">Все платформы</p>
@@ -148,13 +168,12 @@ export function Analytics() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        {/* Platform breakdown bar */}
         <div className="col-span-2 bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
           <h2 className="text-white font-semibold mb-1">Прослушивания по платформам</h2>
           <p className="text-[#6C6890] text-xs mb-4">Суммарно за всё время</p>
           <div className="space-y-4">
             {streamsByPlatform.sort((a, b) => b.streams - a.streams).map((p) => {
-              const maxStreams = streamsByPlatform[0].streams;
+              const maxStreams = streamsByPlatform[0]?.streams ?? 1;
               const pct = (p.streams / maxStreams) * 100;
               return (
                 <div key={p.name}>
@@ -169,10 +188,7 @@ export function Analytics() {
                     </div>
                   </div>
                   <div className="h-2 bg-[#1C1A3B] rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${pct}%`, background: p.color }}
-                    />
+                    <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: p.color }} />
                   </div>
                 </div>
               );
@@ -180,7 +196,6 @@ export function Analytics() {
           </div>
         </div>
 
-        {/* Geo breakdown */}
         <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
           <h2 className="text-white font-semibold mb-1">География</h2>
           <p className="text-[#6C6890] text-xs mb-4">По стране слушателя</p>
@@ -195,10 +210,7 @@ export function Analytics() {
                   </div>
                 </div>
                 <div className="h-1.5 bg-[#1C1A3B] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-violet-500 rounded-full"
-                    style={{ width: `${g.pct}%` }}
-                  />
+                  <div className="h-full bg-violet-500 rounded-full" style={{ width: `${g.pct}%` }} />
                 </div>
               </div>
             ))}

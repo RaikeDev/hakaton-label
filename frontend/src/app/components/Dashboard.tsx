@@ -1,4 +1,4 @@
-import {
+﻿import {
   TrendingUp,
   TrendingDown,
   Music2,
@@ -50,10 +50,10 @@ function StatCard({ label, value, sub, trend, icon: Icon, accent = false }: {
   accent?: boolean;
 }) {
   return (
-    <div className={`rounded-2xl p-5 border ${accent ? "bg-violet-600/10 border-violet-500/30" : "bg-[#131320] border-[#1E1E35]"}`}>
+    <div className={`rounded-2xl p-5 border ${accent ? "bg-amber-500/8 border-amber-400/25" : "bg-[#0F0D22] border-[#1C1A3B]"}`}>
       <div className="flex items-start justify-between mb-3">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${accent ? "bg-violet-600/30" : "bg-[#1A1A2E]"}`}>
-          <Icon size={18} className={accent ? "text-violet-300" : "text-[#9CA3AF]"} />
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${accent ? "bg-amber-500/20" : "bg-[#130F2E]"}`}>
+          <Icon size={18} className={accent ? "text-amber-300" : "text-[#9B98BC]"} />
         </div>
         {trend !== undefined && (
           <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${trend >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
@@ -62,9 +62,9 @@ function StatCard({ label, value, sub, trend, icon: Icon, accent = false }: {
           </div>
         )}
       </div>
-      <div className={`text-2xl font-bold mb-1 ${accent ? "text-white" : "text-white"}`}>{value}</div>
-      <div className="text-[#6B7280] text-sm">{label}</div>
-      {sub && <div className="text-[#4B5563] text-xs mt-1">{sub}</div>}
+      <div className={`text-2xl font-bold mb-1 ${accent ? "text-amber-300" : "text-white"}`}>{value}</div>
+      <div className="text-[#6C6890] text-sm">{label}</div>
+      {sub && <div className="text-[#4A4469] text-xs mt-1">{sub}</div>}
     </div>
   );
 }
@@ -72,17 +72,17 @@ function StatCard({ label, value, sub, trend, icon: Icon, accent = false }: {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1A1A2E] border border-[#2A2A45] rounded-xl px-4 py-3 shadow-xl text-xs">
-        <div className="text-[#9CA3AF] mb-2">{label}</div>
+      <div className="bg-[#130F2E] border border-[#252356] rounded-xl px-4 py-3 shadow-xl text-xs">
+        <div className="text-[#9B98BC] mb-2">{label}</div>
         {payload.map((p: any) => (
           <div key={p.dataKey} className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
-            <span className="text-[#9CA3AF]">{p.name}:</span>
+            <span className="text-[#9B98BC]">{p.name}:</span>
             <span className="text-white font-semibold">{fmtRub(p.value)}</span>
           </div>
         ))}
-        <div className="border-t border-[#2A2A45] mt-2 pt-2 flex justify-between">
-          <span className="text-[#6B7280]">Итого</span>
+        <div className="border-t border-[#252356] mt-2 pt-2 flex justify-between">
+          <span className="text-[#6C6890]">Итого</span>
           <span className="text-white font-bold">{fmtRub(payload.reduce((a: number, p: any) => a + p.value, 0))}</span>
         </div>
       </div>
@@ -99,7 +99,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-[#6B7280] text-sm">Загружаем данные...</p>
+          <p className="text-[#6C6890] text-sm">Загружаем данные...</p>
         </div>
       </div>
     );
@@ -110,7 +110,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 font-medium mb-2">Не удалось загрузить дашборд</p>
-          <p className="text-[#6B7280] text-sm">Проверьте, что backend запущен на порту 8000</p>
+          <p className="text-[#6C6890] text-sm">Проверьте, что backend запущен на порту 8000</p>
         </div>
       </div>
     );
@@ -145,13 +145,13 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-[#6B7280] text-sm mb-1">Добро пожаловать назад,</div>
+          <div className="text-[#6C6890] text-sm mb-1">Добро пожаловать назад,</div>
           <h1 className="text-2xl font-bold text-white">
-            {artist.name}{artist.real_name && <span className="text-[#6B7280] font-normal"> / {artist.real_name}</span>}
+            {artist.name}{artist.real_name && <span className="text-[#6C6890] font-normal"> / {artist.real_name}</span>}
           </h1>
         </div>
         <div className="text-right">
-          <div className="text-[#9CA3AF] text-sm mt-0.5">Данные из базы в реальном времени</div>
+          <div className="text-[#9B98BC] text-sm mt-0.5">Данные из базы в реальном времени</div>
         </div>
       </div>
 
@@ -186,11 +186,11 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
       {/* Charts row */}
       <div className="grid grid-cols-3 gap-4">
         {/* Revenue area chart */}
-        <div className="col-span-2 bg-[#131320] rounded-2xl p-5 border border-[#1E1E35]">
+        <div className="col-span-2 bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-white font-semibold">Доход по платформам</h2>
-              <p className="text-[#6B7280] text-xs mt-0.5">По периодам · руб.</p>
+              <p className="text-[#6C6890] text-xs mt-0.5">По периодам · руб.</p>
             </div>
             <button onClick={() => onNavigate("analytics")} className="flex items-center gap-1 text-violet-400 text-xs hover:text-violet-300 transition-colors">
               Подробнее <ArrowRight size={12} />
@@ -208,9 +208,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                       </linearGradient>
                     ))}
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E1E35" />
-                  <XAxis dataKey="month" tick={{ fill: "#6B7280", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#6B7280", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1C1A3B" />
+                  <XAxis dataKey="month" tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey="yandex" name="Яндекс" stroke={PLATFORM_COLORS[0]} fill="url(#grad-yandex)" strokeWidth={2} dot={false} />
                   <Area type="monotone" dataKey="vk" name="VK" stroke={PLATFORM_COLORS[1]} fill="url(#grad-vk)" strokeWidth={2} dot={false} />
@@ -221,20 +221,20 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                 {["Яндекс", "VK", "Spotify"].map((name, i) => (
                   <div key={name} className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full" style={{ background: PLATFORM_COLORS[i] }} />
-                    <span className="text-[#6B7280] text-xs">{name}</span>
+                    <span className="text-[#6C6890] text-xs">{name}</span>
                   </div>
                 ))}
               </div>
             </>
           ) : (
-            <div className="h-[200px] flex items-center justify-center text-[#4B5563] text-sm">Нет данных по периодам</div>
+            <div className="h-[200px] flex items-center justify-center text-[#4A4469] text-sm">Нет данных по периодам</div>
           )}
         </div>
 
         {/* Platform pie */}
-        <div className="bg-[#131320] rounded-2xl p-5 border border-[#1E1E35]">
+        <div className="bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
           <h2 className="text-white font-semibold mb-1">Разбивка по платформам</h2>
-          <p className="text-[#6B7280] text-xs mb-4">По доходу за последний период</p>
+          <p className="text-[#6C6890] text-xs mb-4">По доходу за последний период</p>
           {pieData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={140}>
@@ -244,7 +244,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                       <Cell key={i} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => fmtRub(v)} contentStyle={{ background: "#1A1A2E", border: "1px solid #2A2A45", borderRadius: 10, fontSize: 12 }} />
+                  <Tooltip formatter={(v: number) => fmtRub(v)} contentStyle={{ background: "#130F2E", border: "1px solid #252356", borderRadius: 10, fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-1.5 mt-2">
@@ -255,7 +255,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
-                        <span className="text-[#9CA3AF] text-xs">{d.name}</span>
+                        <span className="text-[#9B98BC] text-xs">{d.name}</span>
                       </div>
                       <span className="text-white text-xs font-semibold">{pct}%</span>
                     </div>
@@ -264,7 +264,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
               </div>
             </>
           ) : (
-            <div className="h-[140px] flex items-center justify-center text-[#4B5563] text-sm">Нет данных</div>
+            <div className="h-[140px] flex items-center justify-center text-[#4A4469] text-sm">Нет данных</div>
           )}
         </div>
       </div>
@@ -272,7 +272,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
       {/* Bottom row */}
       <div className="grid grid-cols-3 gap-4">
         {/* Top tracks */}
-        <div className="col-span-2 bg-[#131320] rounded-2xl p-5 border border-[#1E1E35]">
+        <div className="col-span-2 bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold">Топ треков</h2>
             <button onClick={() => onNavigate("catalog")} className="flex items-center gap-1 text-violet-400 text-xs hover:text-violet-300 transition-colors">
@@ -282,8 +282,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
           {topTracks.length > 0 ? (
             <div className="space-y-3">
               {topTracks.map((track: any, idx: number) => (
-                <div key={track.id} className="flex items-center gap-3 group hover:bg-[#1A1A2E] rounded-xl p-2 -mx-2 transition-colors">
-                  <span className="text-[#4B5563] text-sm font-mono w-5 text-center shrink-0">{idx + 1}</span>
+                <div key={track.id} className="flex items-center gap-3 group hover:bg-[#130F2E] rounded-xl p-2 -mx-2 transition-colors">
+                  <span className="text-[#4A4469] text-sm font-mono w-5 text-center shrink-0">{idx + 1}</span>
                   <img
                     src={track.cover_url ?? ""}
                     alt={track.title}
@@ -292,7 +292,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-sm font-medium truncate">{track.title}</div>
-                    <div className="text-[#6B7280] text-xs">{track.isrc ?? "—"}</div>
+                    <div className="text-[#6C6890] text-xs">{track.isrc ?? "—"}</div>
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-white text-sm font-semibold">{fmtStreams(track.streams)}</div>
@@ -302,14 +302,14 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
               ))}
             </div>
           ) : (
-            <div className="text-[#4B5563] text-sm text-center py-8">Треки не найдены</div>
+            <div className="text-[#4A4469] text-sm text-center py-8">Треки не найдены</div>
           )}
         </div>
 
         {/* Right column */}
         <div className="space-y-4">
           {/* Recent activity */}
-          <div className="bg-[#131320] rounded-2xl p-5 border border-[#1E1E35]">
+          <div className="bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-white font-semibold">Последние операции</h2>
               <button onClick={() => onNavigate("balance")} className="text-violet-400 text-xs hover:text-violet-300 transition-colors">
@@ -321,8 +321,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                 {recentTx.map((tx: any) => (
                   <div key={tx.id} className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="text-[#9CA3AF] text-xs leading-snug truncate">{tx.description}</div>
-                      <div className="text-[#4B5563] text-xs mt-0.5">{new Date(tx.date).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}</div>
+                      <div className="text-[#9B98BC] text-xs leading-snug truncate">{tx.description}</div>
+                      <div className="text-[#4A4469] text-xs mt-0.5">{new Date(tx.date).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}</div>
                     </div>
                     <div className={`text-sm font-semibold shrink-0 ${tx.amount > 0 ? "text-emerald-400" : "text-white"}`}>
                       {tx.amount > 0 ? "+" : ""}{fmtRub(Math.abs(tx.amount))}
@@ -331,17 +331,17 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                 ))}
               </div>
             ) : (
-              <div className="text-[#4B5563] text-sm text-center py-4">Нет операций</div>
+              <div className="text-[#4A4469] text-sm text-center py-4">Нет операций</div>
             )}
           </div>
 
           {/* Approvals placeholder */}
-          <div className="bg-[#131320] rounded-2xl p-5 border border-[#1E1E35]">
+          <div className="bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-white font-semibold">Согласования</h2>
               <button onClick={() => onNavigate("approvals")} className="text-violet-400 text-xs hover:text-violet-300 transition-colors">Все</button>
             </div>
-            <p className="text-[#4B5563] text-xs text-center py-2">Перейдите в раздел «Согласования»</p>
+            <p className="text-[#4A4469] text-xs text-center py-2">Перейдите в раздел «Согласования»</p>
           </div>
         </div>
       </div>

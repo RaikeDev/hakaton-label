@@ -1,4 +1,4 @@
-import {
+﻿import {
   BarChart,
   Bar,
   AreaChart,
@@ -40,8 +40,8 @@ const geoData = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#1A1A2E] border border-[#2A2A45] rounded-xl px-4 py-3 shadow-xl text-xs">
-        <div className="text-[#9CA3AF] mb-1">{label}</div>
+      <div className="bg-[#130F2E] border border-[#252356] rounded-xl px-4 py-3 shadow-xl text-xs">
+        <div className="text-[#9B98BC] mb-1">{label}</div>
         {payload.map((p: any, i: number) => (
           <div key={i} className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
@@ -73,7 +73,7 @@ export function Analytics() {
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
       <div>
         <h1 className="text-xl font-bold text-white">Аналитика</h1>
-        <p className="text-[#6B7280] text-sm mt-0.5">Данные по всем платформам · Февраль 2025</p>
+        <p className="text-[#6C6890] text-sm mt-0.5">Данные по всем платформам · Февраль 2025</p>
       </div>
 
       {/* KPI row */}
@@ -86,10 +86,10 @@ export function Analytics() {
         ].map((kpi, i) => {
           const Icon = kpi.icon;
           return (
-            <div key={i} className="bg-[#131320] border border-[#1E1E35] rounded-2xl p-5">
+            <div key={i} className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
               <div className="flex items-start justify-between mb-3">
-                <div className="w-9 h-9 rounded-xl bg-[#1A1A2E] flex items-center justify-center">
-                  <Icon size={18} className="text-[#9CA3AF]" />
+                <div className="w-9 h-9 rounded-xl bg-[#130F2E] flex items-center justify-center">
+                  <Icon size={18} className="text-[#9B98BC]" />
                 </div>
                 {kpi.trend !== 0 && (
                   <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${kpi.trend > 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
@@ -99,7 +99,7 @@ export function Analytics() {
                 )}
               </div>
               <div className="text-white text-2xl font-bold">{kpi.value}</div>
-              <div className="text-[#6B7280] text-sm mt-1">{kpi.label}</div>
+              <div className="text-[#6C6890] text-sm mt-1">{kpi.label}</div>
             </div>
           );
         })}
@@ -107,14 +107,14 @@ export function Analytics() {
 
       <div className="grid grid-cols-2 gap-4">
         {/* Monthly revenue detailed */}
-        <div className="bg-[#131320] border border-[#1E1E35] rounded-2xl p-5">
+        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
           <h2 className="text-white font-semibold mb-1">Доход по месяцам</h2>
-          <p className="text-[#6B7280] text-xs mb-4">Все платформы · руб.</p>
+          <p className="text-[#6C6890] text-xs mb-4">Все платформы · руб.</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyRevenue} margin={{ left: -20, right: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E1E35" />
-              <XAxis dataKey="month" tick={{ fill: "#6B7280", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#6B7280", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#1C1A3B" />
+              <XAxis dataKey="month" tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="yandex" name="Яндекс" stackId="a" fill={PLATFORM_COLORS.yandex} radius={[0, 0, 0, 0]} />
               <Bar dataKey="vk" name="VK" stackId="a" fill={PLATFORM_COLORS.vk} />
@@ -126,9 +126,9 @@ export function Analytics() {
         </div>
 
         {/* Monthly streams */}
-        <div className="bg-[#131320] border border-[#1E1E35] rounded-2xl p-5">
+        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
           <h2 className="text-white font-semibold mb-1">Прослушивания по месяцам</h2>
-          <p className="text-[#6B7280] text-xs mb-4">Все платформы</p>
+          <p className="text-[#6C6890] text-xs mb-4">Все платформы</p>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={monthlyRevenue} margin={{ left: -15, right: 5 }}>
               <defs>
@@ -137,9 +137,9 @@ export function Analytics() {
                   <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E1E35" />
-              <XAxis dataKey="month" tick={{ fill: "#6B7280", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#6B7280", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => fmtStreams(v)} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#1C1A3B" />
+              <XAxis dataKey="month" tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => fmtStreams(v)} />
               <Tooltip content={<CustomTooltip />} />
               <Area type="monotone" dataKey="streams" stroke="#8B5CF6" fill="url(#streamGrad)" strokeWidth={2} dot={false} />
             </AreaChart>
@@ -149,9 +149,9 @@ export function Analytics() {
 
       <div className="grid grid-cols-3 gap-4">
         {/* Platform breakdown bar */}
-        <div className="col-span-2 bg-[#131320] border border-[#1E1E35] rounded-2xl p-5">
+        <div className="col-span-2 bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
           <h2 className="text-white font-semibold mb-1">Прослушивания по платформам</h2>
-          <p className="text-[#6B7280] text-xs mb-4">Суммарно за всё время</p>
+          <p className="text-[#6C6890] text-xs mb-4">Суммарно за всё время</p>
           <div className="space-y-4">
             {streamsByPlatform.sort((a, b) => b.streams - a.streams).map((p) => {
               const maxStreams = streamsByPlatform[0].streams;
@@ -165,10 +165,10 @@ export function Analytics() {
                     </div>
                     <div className="text-right">
                       <span className="text-white text-sm font-semibold">{fmtStreams(p.streams)}</span>
-                      <span className="text-[#6B7280] text-xs ml-2">· {fmtRub(p.revenue)}</span>
+                      <span className="text-[#6C6890] text-xs ml-2">· {fmtRub(p.revenue)}</span>
                     </div>
                   </div>
-                  <div className="h-2 bg-[#1E1E35] rounded-full overflow-hidden">
+                  <div className="h-2 bg-[#1C1A3B] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{ width: `${pct}%`, background: p.color }}
@@ -181,20 +181,20 @@ export function Analytics() {
         </div>
 
         {/* Geo breakdown */}
-        <div className="bg-[#131320] border border-[#1E1E35] rounded-2xl p-5">
+        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
           <h2 className="text-white font-semibold mb-1">География</h2>
-          <p className="text-[#6B7280] text-xs mb-4">По стране слушателя</p>
+          <p className="text-[#6C6890] text-xs mb-4">По стране слушателя</p>
           <div className="space-y-3">
             {geoData.map((g) => (
               <div key={g.country}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[#9CA3AF] text-sm">{g.country}</span>
+                  <span className="text-[#9B98BC] text-sm">{g.country}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#6B7280] text-xs">{fmtStreams(g.streams)}</span>
+                    <span className="text-[#6C6890] text-xs">{fmtStreams(g.streams)}</span>
                     <span className="text-white text-xs font-semibold w-10 text-right">{g.pct}%</span>
                   </div>
                 </div>
-                <div className="h-1.5 bg-[#1E1E35] rounded-full overflow-hidden">
+                <div className="h-1.5 bg-[#1C1A3B] rounded-full overflow-hidden">
                   <div
                     className="h-full bg-violet-500 rounded-full"
                     style={{ width: `${g.pct}%` }}
@@ -207,12 +207,12 @@ export function Analytics() {
       </div>
 
       {/* Track performance table */}
-      <div className="bg-[#131320] border border-[#1E1E35] rounded-2xl p-5">
+      <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
         <h2 className="text-white font-semibold mb-4">Эффективность треков</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[#4B5563] text-xs border-b border-[#1E1E35]">
+              <tr className="text-[#4A4469] text-xs border-b border-[#1C1A3B]">
                 <th className="text-left pb-3 font-medium">Трек</th>
                 <th className="text-right pb-3 font-medium">Прослушивания</th>
                 <th className="text-right pb-3 font-medium">Доход</th>
@@ -220,14 +220,14 @@ export function Analytics() {
             </thead>
             <tbody>
               {(analyticsData?.tracks ?? []).slice(0, 5).map((track: any) => (
-                <tr key={track.track_id} className="border-b border-[#1E1E35]/50 hover:bg-[#1A1A2E]/50 transition-colors">
+                <tr key={track.track_id} className="border-b border-[#1C1A3B]/50 hover:bg-[#130F2E]/50 transition-colors">
                   <td className="py-3 text-white font-medium">{track.title}</td>
-                  <td className="py-3 text-right text-[#9CA3AF]">{fmtStreams(track.streams)}</td>
+                  <td className="py-3 text-right text-[#9B98BC]">{fmtStreams(track.streams)}</td>
                   <td className="py-3 text-right text-white font-semibold">{fmtRub(track.revenue)}</td>
                 </tr>
               ))}
               {(analyticsData?.tracks ?? []).length === 0 && (
-                <tr><td colSpan={3} className="py-6 text-center text-[#4B5563]">{isLoading ? "Загрузка..." : "Нет данных"}</td></tr>
+                <tr><td colSpan={3} className="py-6 text-center text-[#4A4469]">{isLoading ? "Загрузка..." : "Нет данных"}</td></tr>
               )}
             </tbody>
           </table>

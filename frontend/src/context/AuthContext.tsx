@@ -15,7 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(getUser);
 
   async function login(email: string, password: string) {
-    const data = await apiLogin(email, password);
+    const data = await apiLogin(email.trim().toLowerCase(), password);
     setAuth(data.access_token, data.user);
     setUser(data.user);
   }

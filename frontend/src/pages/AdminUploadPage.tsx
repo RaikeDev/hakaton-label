@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { uploadRoyaltyReport } from "../api/uploadsApi";
 import { Upload, CheckCircle, AlertCircle, FileSpreadsheet, X } from "lucide-react";
@@ -57,17 +57,17 @@ export function AdminUploadPage() {
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
       <div>
         <h1 className="text-white text-2xl font-bold">Загрузка отчёта по роялти</h1>
-        <p className="text-[#6B7280] text-sm mt-1">
+        <p className="text-[#6C6890] text-sm mt-1">
           Импорт CSV/Excel-файла от платформ или выгрузки из Яндекс DataLens
         </p>
       </div>
 
       {/* Format info */}
-      <div className="rounded-2xl p-4 border border-[#1E1E35] bg-[#0D1020]">
-        <p className="text-[#9CA3AF] text-sm font-semibold mb-2">Ожидаемые колонки файла:</p>
+      <div className="rounded-2xl p-4 border border-[#1C1A3B] bg-[#0D1020]">
+        <p className="text-[#9B98BC] text-sm font-semibold mb-2">Ожидаемые колонки файла:</p>
         <div className="flex flex-wrap gap-2">
           {["artist_name", "track_title", "isrc", "platform", "period", "streams", "gross_revenue", "currency"].map(col => (
-            <span key={col} className="text-xs bg-[#131320] border border-[#1E1E35] text-violet-300 rounded px-2 py-0.5 font-mono">{col}</span>
+            <span key={col} className="text-xs bg-[#0F0D22] border border-[#1C1A3B] text-violet-300 rounded px-2 py-0.5 font-mono">{col}</span>
           ))}
         </div>
       </div>
@@ -79,7 +79,7 @@ export function AdminUploadPage() {
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
         className={`rounded-2xl border-2 border-dashed p-10 text-center cursor-pointer transition-colors ${
-          dragging ? "border-violet-500 bg-violet-500/5" : "border-[#1E1E35] bg-[#0D0D1A] hover:border-violet-600/50"
+          dragging ? "border-violet-500 bg-violet-500/5" : "border-[#1C1A3B] bg-[#09071C] hover:border-violet-600/50"
         }`}
       >
         <input
@@ -94,20 +94,20 @@ export function AdminUploadPage() {
             <FileSpreadsheet size={32} className="text-emerald-400" />
             <div className="text-left">
               <p className="text-white font-medium">{file.name}</p>
-              <p className="text-[#6B7280] text-sm">{(file.size / 1024).toFixed(1)} KB</p>
+              <p className="text-[#6C6890] text-sm">{(file.size / 1024).toFixed(1)} KB</p>
             </div>
             <button
               onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); }}
-              className="ml-4 text-[#4B5563] hover:text-red-400 transition-colors"
+              className="ml-4 text-[#4A4469] hover:text-red-400 transition-colors"
             >
               <X size={18} />
             </button>
           </div>
         ) : (
           <>
-            <Upload size={32} className="text-[#4B5563] mx-auto mb-3" />
+            <Upload size={32} className="text-[#4A4469] mx-auto mb-3" />
             <p className="text-white font-medium">Перетащите файл или нажмите для выбора</p>
-            <p className="text-[#6B7280] text-sm mt-1">CSV, XLSX, XLS</p>
+            <p className="text-[#6C6890] text-sm mt-1">CSV, XLSX, XLS</p>
           </>
         )}
       </div>
@@ -116,7 +116,7 @@ export function AdminUploadPage() {
         <button
           onClick={handleUpload}
           disabled={loading}
-          className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-semibold rounded-xl py-3 transition-colors"
+          className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 text-white font-semibold rounded-xl py-3 transition-colors"
         >
           {loading ? "Обрабатываем файл..." : "Загрузить и обработать"}
         </button>
@@ -136,7 +136,7 @@ export function AdminUploadPage() {
               <p className="text-white font-semibold">
                 {result.status === "completed" ? "Файл обработан успешно" : "Ошибка обработки"}
               </p>
-              {result.message && <p className="text-[#9CA3AF] text-sm">{result.message}</p>}
+              {result.message && <p className="text-[#9B98BC] text-sm">{result.message}</p>}
             </div>
           </div>
 
@@ -148,9 +148,9 @@ export function AdminUploadPage() {
                 { label: "Ошибок", value: fmtNumber(result.rows_failed), err: result.rows_failed > 0 },
                 { label: "Транзакций создано", value: fmtNumber(result.created_transactions) },
               ].map(({ label, value, ok, err }) => (
-                <div key={label} className="rounded-xl p-3 bg-[#131320] border border-[#1E1E35]">
+                <div key={label} className="rounded-xl p-3 bg-[#0F0D22] border border-[#1C1A3B]">
                   <p className={`text-xl font-bold ${ok ? "text-emerald-400" : err ? "text-red-400" : "text-white"}`}>{value}</p>
-                  <p className="text-[#6B7280] text-xs mt-0.5">{label}</p>
+                  <p className="text-[#6C6890] text-xs mt-0.5">{label}</p>
                 </div>
               ))}
             </div>
@@ -158,11 +158,11 @@ export function AdminUploadPage() {
 
           {result.errors.length > 0 && (
             <div>
-              <p className="text-[#9CA3AF] text-sm font-semibold mb-2">Ошибки ({result.errors.length}):</p>
+              <p className="text-[#9B98BC] text-sm font-semibold mb-2">Ошибки ({result.errors.length}):</p>
               <div className="space-y-1 max-h-48 overflow-y-auto">
                 {result.errors.map((e, i) => (
                   <div key={i} className="flex gap-2 text-sm">
-                    <span className="text-[#6B7280] shrink-0">Строка {e.row}:</span>
+                    <span className="text-[#6C6890] shrink-0">Строка {e.row}:</span>
                     <span className="text-red-400">{e.message}</span>
                   </div>
                 ))}
@@ -172,7 +172,7 @@ export function AdminUploadPage() {
 
           <button
             onClick={() => { setFile(null); setResult(null); }}
-            className="mt-4 text-sm text-[#6B7280] hover:text-white transition-colors"
+            className="mt-4 text-sm text-[#6C6890] hover:text-white transition-colors"
           >
             Загрузить ещё один файл
           </button>

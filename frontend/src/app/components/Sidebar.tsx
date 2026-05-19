@@ -1,17 +1,17 @@
-﻿import {
+import {
+  ArrowLeftRight,
   BarChart3,
-  Music2,
-  Wallet,
   CheckSquare,
   CreditCard,
-  Film,
-  Upload,
-  LogOut,
   Disc3,
-  Users,
-  ArrowLeftRight,
+  Film,
+  LogOut,
+  Music2,
   Search,
   Sparkles,
+  Upload,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -29,7 +29,7 @@ const artistNav = [
 const adminNav = [
   { id: "dashboard", icon: BarChart3, label: "Обзор лейбла" },
   { id: "artists", icon: Users, label: "Артисты" },
-  { id: "upload", icon: Upload, label: "Загрузка отчётов" },
+  { id: "upload", icon: Upload, label: "Загрузка отчетов" },
   { id: "ai-insights", icon: Sparkles, label: "AI-инсайты" },
   { id: "admin-payments", icon: CreditCard, label: "Выплаты" },
   { id: "admin-approvals", icon: CheckSquare, label: "Согласования" },
@@ -45,84 +45,86 @@ export function Sidebar({ active, onNavigate }: SidebarProps) {
   const { user, logout, switchRole } = useAuth();
   const isAdmin = user?.role === "admin";
   const navItems = isAdmin ? adminNav : artistNav;
-  const displayName = user?.name ?? "—";
+  const displayName = user?.name ?? "-";
+
+  function openSearch() {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
+  }
 
   return (
-    <aside className="flex flex-col h-full w-[240px] shrink-0 bg-gradient-to-b from-[#0A0820] to-[#06050F] border-r border-[#1C1A3B]">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-[#1C1A3B]">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(139,92,246,0.4)]">
-          <span className="text-white font-black text-sm tracking-wider">K</span>
+    <aside className="flex h-full w-[248px] shrink-0 flex-col border-r border-[#202633] bg-[#0E1118]">
+      <div className="flex items-center gap-3 border-b border-[#202633] px-5 py-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[#2A3242] bg-[#151B26] text-sm font-bold text-white">
+          K
         </div>
-        <div>
-          <div className="text-white font-bold text-base leading-none tracking-wide">KAMIK</div>
-          <div className="text-[#6C6890] text-xs mt-0.5">Label Portal</div>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold leading-none tracking-wide text-white">KAMIK</div>
+          <div className="mt-1 text-xs text-[#8B93A3]">Label Portal</div>
         </div>
       </div>
 
-      {/* User card */}
-      <div className="mx-4 mt-4 p-3 rounded-xl bg-[#131325] border border-[#1C1A3B]">
+      <div className="mx-3 mt-3 rounded-md border border-[#202633] bg-[#111722] p-3">
         <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 font-bold text-sm ${isAdmin ? "bg-emerald-600/30 text-emerald-300" : "bg-violet-600/30 text-violet-300"}`}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#1A2332] text-sm font-semibold text-[#D8DEE9]">
             {displayName.charAt(0)}
           </div>
           <div className="min-w-0">
-            <div className="text-white font-semibold text-sm leading-none truncate">{displayName}</div>
-            <div className="text-[#6C6890] text-xs mt-1">{isAdmin ? "Администратор" : "Артист"}</div>
+            <div className="truncate text-sm font-semibold leading-none text-white">{displayName}</div>
+            <div className="mt-1 text-xs text-[#8B93A3]">{isAdmin ? "Администратор" : "Артист"}</div>
           </div>
-          <div className="ml-auto">
-            <div className={`w-2 h-2 rounded-full ring-2 ${isAdmin ? "bg-emerald-400 ring-emerald-400/20" : "bg-violet-400 ring-violet-400/20"}`} />
-          </div>
+          <span
+            className={`ml-auto h-2 w-2 rounded-full ${isAdmin ? "bg-emerald-400" : "bg-[#4B8BFF]"}`}
+            aria-label="Активный пользователь"
+          />
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 mt-4 space-y-0.5 overflow-y-auto">
+      <nav className="mt-3 flex-1 space-y-1 overflow-y-auto px-3">
         <button
-  onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#9CA3AF] hover:text-white hover:bg-[#1A1A2E] transition-all group mb-2"
->
-  <Search size={17} className="text-[#6B7280] group-hover:text-[#9CA3AF]" />
-  <span className="font-medium">Поиск</span>
-  <kbd className="ml-auto text-xs px-1.5 py-0.5 rounded bg-[#1E1E35] text-[#6B7280]">Ctrl+K</kbd>
-</button>
+          onClick={openSearch}
+          className="group flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-[#A5ADBA] transition-colors hover:bg-[#151B26] hover:text-white"
+        >
+          <Search size={17} className="text-[#667085] group-hover:text-[#A5ADBA]" />
+          <span className="font-medium">Поиск</span>
+          <kbd className="ml-auto rounded border border-[#2A3242] bg-[#0B0F16] px-1.5 py-0.5 text-[11px] text-[#747D8C]">
+            Ctrl K
+          </kbd>
+        </button>
+
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = active === item.id;
+
           return (
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group relative ${
+              className={`group flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm transition-colors ${
                 isActive
-                  ? "bg-gradient-to-r from-violet-600/25 to-fuchsia-600/10 text-white shadow-[0_0_20px_rgba(139,92,246,0.12)]"
-                  : "text-[#9B98BC] hover:text-white hover:bg-[#130F2E]"
+                  ? "bg-[#1B2638] text-white"
+                  : "text-[#A5ADBA] hover:bg-[#151B26] hover:text-white"
               }`}
             >
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-gradient-to-b from-violet-400 to-fuchsia-500 rounded-r-full" />
-              )}
-              <Icon size={17} className={isActive ? "text-violet-300" : "text-[#6C6890] group-hover:text-[#9B98BC]"} />
-              <span className="font-medium">{item.label}</span>
+              <Icon size={17} className={isActive ? "text-[#6FA1FF]" : "text-[#667085] group-hover:text-[#A5ADBA]"} />
+              <span className="truncate font-medium">{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      {/* Bottom */}
-      <div className="px-3 pb-4 space-y-0.5 border-t border-[#1C1A3B] pt-3 mt-2">
+      <div className="mt-2 space-y-1 border-t border-[#202633] px-3 py-3">
         <button
           onClick={switchRole}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#9B98BC] hover:text-white hover:bg-[#130F2E] transition-all group"
+          className="group flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-[#A5ADBA] transition-colors hover:bg-[#151B26] hover:text-white"
         >
-          <ArrowLeftRight size={17} className="text-[#6C6890] group-hover:text-[#9B98BC]" />
-          <span className="font-medium">{isAdmin ? "Режим артиста" : "Режим админа"}</span>
+          <ArrowLeftRight size={17} className="text-[#667085] group-hover:text-[#A5ADBA]" />
+          <span className="truncate font-medium">{isAdmin ? "Режим артиста" : "Режим админа"}</span>
         </button>
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#9B98BC] hover:text-red-400 hover:bg-red-500/10 transition-all group"
+          className="group flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-[#A5ADBA] transition-colors hover:bg-red-500/10 hover:text-red-300"
         >
-          <LogOut size={17} className="text-[#6C6890] group-hover:text-red-400" />
+          <LogOut size={17} className="text-[#667085] group-hover:text-red-300" />
           <span className="font-medium">Выйти</span>
         </button>
       </div>

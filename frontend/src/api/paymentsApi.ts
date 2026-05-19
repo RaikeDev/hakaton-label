@@ -1,6 +1,19 @@
 import { api } from "./client";
 
-export async function fetchPayments(artistId: number) {
+export type PaymentStatus = "pending" | "approved" | "paid";
+
+export interface Payment {
+  id: number;
+  period: string;
+  amount: number;
+  payout: number;
+  tax: number | null;
+  commission: number | null;
+  status: PaymentStatus;
+  paid_date: string | null;
+}
+
+export async function fetchPayments(artistId: number): Promise<Payment[]> {
   const { data } = await api.get("/payments", { params: { artist_id: artistId } });
   return data;
 }

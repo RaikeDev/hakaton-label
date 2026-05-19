@@ -1,173 +1,136 @@
-﻿import { CheckCircle, Clock, Download, CreditCard, TrendingUp, Percent, DollarSign, Calendar } from "lucide-react";
-import { usePayments } from "../../hooks/usePayments";
+import { Calendar, CheckCircle, Clock, CreditCard, Download, Percent, Send, ShieldCheck, TrendingUp, Wallet } from "lucide-react";
+import { Payment, PaymentStatus } from "../../api/paymentsApi";
+import { useAuth } from "../../context/AuthContext";
 import { useDashboard } from "../../hooks/useDashboard";
+import { usePayments } from "../../hooks/usePayments";
 
 function fmtRub(n: number) {
   return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(n);
 }
 
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+const statusLabels: Record<PaymentStatus, string> = {
+  pending: "На согласовании",
+  approved: "Готово к переводу",
+  paid: "Выплачено",
+};
+
+const statusClasses: Record<PaymentStatus, string> = {
+  pending: "border-amber-400/30 bg-amber-400/10 text-amber-300",
+  approved: "border-[#4B8BFF]/30 bg-[#4B8BFF]/10 text-[#8BB4FF]",
+  paid: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
+};
+
 export function Payments() {
-  const { data: paymentsRaw = [], isLoading } = usePayments();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const { data: payments = [], isLoading, approveMutation, markPaidMutation } = usePayments();
   const { data: dashData } = useDashboard();
-  const payments = paymentsRaw as any[];
-  const totalPaid = payments.filter((p: any) => p.status === "paid").reduce((a: number, p: any) => a + p.payout, 0);
-  const paidList = payments.filter((p: any) => p.status === "paid");
+
+  const totalPaid = payments.filter((payment) => payment.status === "paid").reduce((sum, payment) => sum + payment.payout, 0);
+  const payable = payments.filter((payment) => payment.status !== "paid").reduce((sum, payment) => sum + payment.payout, 0);
+  const approvedPayable = payments.filter((payment) => payment.status === "approved").reduce((sum, payment) => sum + payment.payout, 0);
+  const paidList = payments.filter((payment) => payment.status === "paid");
   const avgPayout = paidList.length > 0 ? totalPaid / paidList.length : 0;
-  const pendingPayout = dashData?.artist?.pending_payout ?? 0;
+  const artistShare = dashData?.artist?.artist_share_percent ?? 70;
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-white">Выплаты</h1>
-        <p className="text-[#6C6890] text-sm mt-0.5">История и расчёт роялти</p>
+    <div className="flex-1 space-y-6 overflow-y-auto p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-white">Выплаты и переводы</h1>
+          <p className="mt-1 text-sm text-[#8B93A3]">
+            Расчет роялти, согласование и фиксация банковских переводов.
+          </p>
+        </div>
+        {isAdmin && (
+          <div className="rounded-md border border-[#2A3242] bg-[#111722] px-4 py-2 text-right">
+            <div className="text-sm font-semibold text-white">{fmtRub(approvedPayable)}</div>
+            <div className="text-xs text-[#8B93A3]">готово к переводу</div>
+          </div>
+        )}
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-amber-500/10 border border-amber-400/30 rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Wallet size={16} className="text-amber-400" />
-            <span className="text-[#9B98BC] text-sm">К выплате</span>
-          </div>
-          <div className="text-amber-300 text-2xl font-bold">{fmtRub(pendingPayout)}</div>
-          <div className="text-[#6C6890] text-xs mt-1">Февраль 2025</div>
-        </div>
-        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <CreditCard size={16} className="text-emerald-400" />
-            <span className="text-[#9B98BC] text-sm">Выплачено всего</span>
-          </div>
-          <div className="text-white text-2xl font-bold">{fmtRub(totalPaid)}</div>
-          <div className="text-[#6C6890] text-xs mt-1">За всё время</div>
-        </div>
-        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp size={16} className="text-cyan-400" />
-            <span className="text-[#9B98BC] text-sm">Средняя выплата</span>
-          </div>
-          <div className="text-white text-2xl font-bold">{fmtRub(avgPayout)}</div>
-          <div className="text-[#6C6890] text-xs mt-1">В месяц</div>
-        </div>
-        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Percent size={16} className="text-amber-400" />
-            <span className="text-[#9B98BC] text-sm">Доля артиста</span>
-          </div>
-          <div className="text-white text-2xl font-bold">75%</div>
-          <div className="text-[#6C6890] text-xs mt-1">По контракту</div>
-        </div>
+        <MetricCard icon={Wallet} label="К выплате" value={fmtRub(payable)} sub="Ожидает согласования или перевода" accent="amber" />
+        <MetricCard icon={CreditCard} label="Выплачено всего" value={fmtRub(totalPaid)} sub="За все периоды" />
+        <MetricCard icon={TrendingUp} label="Средняя выплата" value={fmtRub(avgPayout)} sub="По закрытым платежам" />
+        <MetricCard icon={Percent} label="Доля артиста" value={`${artistShare}%`} sub="По контракту" />
       </div>
 
-      {/* Contract breakdown */}
-      <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
-        <h2 className="text-white font-semibold mb-4">Структура расчёта</h2>
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { label: "Валовой доход", value: "100%", desc: "Со всех платформ", color: "text-white" },
-            { label: "Комиссия лейбла", value: "10%", desc: "Административные расходы", color: "text-[#9B98BC]" },
-            { label: "Налог (НДФЛ)", value: "10%", desc: "Удерживается у источника", color: "text-[#9B98BC]" },
-            { label: "Выплата артисту", value: "75%", desc: "Нетто на счёт", color: "text-emerald-400" },
-          ].map((item) => (
-            <div key={item.label} className="bg-[#130F2E] border border-[#252356] rounded-xl p-4">
-              <div className={`text-2xl font-bold mb-1 ${item.color}`}>{item.value}</div>
-              <div className="text-white text-sm font-medium">{item.label}</div>
-              <div className="text-[#4A4469] text-xs mt-1">{item.desc}</div>
+      <div className="grid grid-cols-[minmax(0,1fr)_320px] gap-4">
+        <div className="overflow-hidden rounded-lg border border-[#202633] bg-[#10141D]">
+          <div className="flex items-center justify-between border-b border-[#202633] px-5 py-4">
+            <div>
+              <h2 className="font-semibold text-white">Реестр выплат</h2>
+              <p className="mt-0.5 text-xs text-[#8B93A3]">Расчет, согласование, перевод</p>
             </div>
-          ))}
-        </div>
-        <div className="mt-4 bg-[#130F2E] border border-[#252356] rounded-xl p-4 flex items-start gap-3">
-          <Calendar size={16} className="text-violet-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-white text-sm font-medium">Расписание выплат</p>
-            <p className="text-[#6C6890] text-xs mt-0.5">Выплаты производятся 10-го числа каждого месяца за предыдущий период. Минимальная сумма для вывода: 5 000 ₽.</p>
+            <button className="flex h-9 items-center gap-2 rounded-md border border-[#2A3242] bg-[#111722] px-3 text-xs font-medium text-[#C5CBD6] transition-colors hover:bg-[#151D2A]">
+              <Download size={13} />
+              Скачать отчет
+            </button>
           </div>
-        </div>
-      </div>
 
-      {/* Payments table */}
-      <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1C1A3B]">
-          <h2 className="text-white font-semibold">История выплат</h2>
-          <button className="flex items-center gap-2 px-3 py-2 bg-[#130F2E] border border-[#252356] text-[#9B98BC] text-xs rounded-lg hover:text-white transition-colors">
-            <Download size={13} />
-            Скачать отчёт
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-[#4A4469] text-xs border-b border-[#1C1A3B]">
-                <th className="text-left px-5 py-3 font-medium">Период</th>
-                <th className="text-right px-4 py-3 font-medium">Валовой доход</th>
-                <th className="text-right px-4 py-3 font-medium">Комиссия лейбла</th>
-                <th className="text-right px-4 py-3 font-medium">Налог</th>
-                <th className="text-right px-4 py-3 font-medium">Сумма выплаты</th>
-                <th className="text-right px-4 py-3 font-medium">Дата</th>
-                <th className="text-center px-4 py-3 font-medium">Статус</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((p) => (
-                <tr key={p.id} className="border-b border-[#1C1A3B]/50 last:border-0 hover:bg-[#130F2E]/50 transition-colors">
-                  <td className="px-5 py-4 text-white font-medium">{p.period}</td>
-                  <td className="px-4 py-4 text-right text-[#9B98BC]">{fmtRub(p.amount)}</td>
-                  <td className="px-4 py-4 text-right text-[#9B98BC]">
-                    {p.commission !== null ? fmtRub(p.commission) : <span className="text-[#4A4469]">—</span>}
-                  </td>
-                  <td className="px-4 py-4 text-right text-[#9B98BC]">
-                    {p.tax !== null ? fmtRub(p.tax) : <span className="text-[#4A4469]">—</span>}
-                  </td>
-                  <td className="px-4 py-4 text-right font-bold text-white text-base">{fmtRub(p.payout)}</td>
-                  <td className="px-4 py-4 text-right text-[#6C6890] text-sm">
-                    {p.paid_date
-                      ? new Date(p.paid_date).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" })
-                      : <span className="text-[#4A4469]">—</span>}
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    {p.status === "paid" ? (
-                      <span className="flex items-center justify-center gap-1 text-emerald-400 text-xs font-semibold">
-                        <CheckCircle size={12} />
-                        Выплачено
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center gap-1 text-amber-400 text-xs font-semibold">
-                        <Clock size={12} />
-                        Ожидается
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-4">
-                    <button className="text-violet-400 hover:text-violet-300 transition-colors">
-                      <Download size={14} />
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#202633] text-xs text-[#747D8C]">
+                  <th className="px-5 py-3 text-left font-medium">Период</th>
+                  <th className="px-4 py-3 text-right font-medium">Валовой доход</th>
+                  <th className="px-4 py-3 text-right font-medium">Комиссия</th>
+                  <th className="px-4 py-3 text-right font-medium">Налог</th>
+                  <th className="px-4 py-3 text-right font-medium">К переводу</th>
+                  <th className="px-4 py-3 text-center font-medium">Статус</th>
+                  <th className="px-5 py-3 text-right font-medium">Действие</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-12 text-center text-sm text-[#8B93A3]">
+                      Загружаем выплаты...
+                    </td>
+                  </tr>
+                ) : (
+                  payments.map((payment) => (
+                    <PaymentRow
+                      key={payment.id}
+                      payment={payment}
+                      isAdmin={isAdmin}
+                      isMutating={approveMutation.isPending || markPaidMutation.isPending}
+                      onApprove={(id) => approveMutation.mutate(id)}
+                      onTransfer={(id) => markPaidMutation.mutate({ id, date: todayIso() })}
+                    />
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      {/* Bank details */}
-      <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-white font-semibold">Реквизиты для выплат</h2>
-          <button className="text-violet-400 text-sm hover:text-violet-300 transition-colors">Изменить</button>
-        </div>
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <div className="text-[#6C6890] text-xs mb-1">Банк</div>
-            <div className="text-white">Сбербанк</div>
+        <div className="space-y-4">
+          <div className="rounded-lg border border-[#202633] bg-[#10141D] p-5">
+            <h2 className="mb-4 font-semibold text-white">Правила выплат</h2>
+            <div className="space-y-4">
+              <Rule icon={Calendar} title="График" text="Переводы выполняются 10-го числа за предыдущий отчетный период." />
+              <Rule icon={ShieldCheck} title="Контроль" text="Платеж должен быть согласован администратором до отправки." />
+              <Rule icon={Wallet} title="Минимум" text="Минимальная сумма для вывода: 5 000 руб." />
+            </div>
           </div>
-          <div>
-            <div className="text-[#6C6890] text-xs mb-1">Счёт</div>
-            <div className="text-white font-mono">•••• •••• •••• 4521</div>
-          </div>
-          <div>
-            <div className="text-[#6C6890] text-xs mb-1">Получатель</div>
-            <div className="text-white">Ковалёв Максим Андреевич</div>
+
+          <div className="rounded-lg border border-[#202633] bg-[#10141D] p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-semibold text-white">Реквизиты</h2>
+              <button className="text-sm font-medium text-[#6FA1FF] transition-colors hover:text-[#8BB4FF]">Изменить</button>
+            </div>
+            <div className="space-y-3 text-sm">
+              <Field label="Банк" value="Сбербанк" />
+              <Field label="Счет" value="**** **** **** 4521" mono />
+              <Field label="Получатель" value="Ковалев Максим Андреевич" />
+            </div>
           </div>
         </div>
       </div>
@@ -175,12 +138,98 @@ export function Payments() {
   );
 }
 
-function Wallet({ size, className }: { size: number; className?: string }) {
+function PaymentRow({
+  payment,
+  isAdmin,
+  isMutating,
+  onApprove,
+  onTransfer,
+}: {
+  payment: Payment;
+  isAdmin: boolean;
+  isMutating: boolean;
+  onApprove: (id: number) => void;
+  onTransfer: (id: number) => void;
+}) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-      <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
-    </svg>
+    <tr className="border-b border-[#202633]/80 transition-colors last:border-0 hover:bg-[#151B26]/70">
+      <td className="px-5 py-4">
+        <div className="font-medium text-white">{payment.period}</div>
+        <div className="mt-0.5 text-xs text-[#747D8C]">
+          {payment.paid_date ? `Переведено ${new Date(payment.paid_date).toLocaleDateString("ru-RU")}` : "Дата перевода не назначена"}
+        </div>
+      </td>
+      <td className="px-4 py-4 text-right text-[#B5BCC9]">{fmtRub(payment.amount)}</td>
+      <td className="px-4 py-4 text-right text-[#B5BCC9]">{payment.commission !== null ? fmtRub(payment.commission) : "-"}</td>
+      <td className="px-4 py-4 text-right text-[#B5BCC9]">{payment.tax !== null ? fmtRub(payment.tax) : "-"}</td>
+      <td className="px-4 py-4 text-right font-semibold text-white">{fmtRub(payment.payout)}</td>
+      <td className="px-4 py-4 text-center">
+        <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium ${statusClasses[payment.status]}`}>
+          {payment.status === "paid" ? <CheckCircle size={12} /> : <Clock size={12} />}
+          {statusLabels[payment.status]}
+        </span>
+      </td>
+      <td className="px-5 py-4 text-right">
+        {isAdmin && payment.status === "pending" && (
+          <button
+            onClick={() => onApprove(payment.id)}
+            disabled={isMutating}
+            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#2F6FED] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#3D7EFF] disabled:opacity-50"
+          >
+            <ShieldCheck size={13} />
+            Согласовать
+          </button>
+        )}
+        {isAdmin && payment.status === "approved" && (
+          <button
+            onClick={() => onTransfer(payment.id)}
+            disabled={isMutating}
+            className="inline-flex h-9 items-center gap-2 rounded-md bg-emerald-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+          >
+            <Send size={13} />
+            Перевести
+          </button>
+        )}
+        {(!isAdmin || payment.status === "paid") && <span className="text-xs text-[#747D8C]">-</span>}
+      </td>
+    </tr>
+  );
+}
+
+function MetricCard({ icon: Icon, label, value, sub, accent }: { icon: typeof Wallet; label: string; value: string; sub: string; accent?: "amber" }) {
+  const isAccent = accent === "amber";
+
+  return (
+    <div className={`rounded-lg border p-5 ${isAccent ? "border-amber-400/25 bg-amber-400/8" : "border-[#202633] bg-[#10141D]"}`}>
+      <div className="mb-3 flex items-center gap-2">
+        <Icon size={16} className={isAccent ? "text-amber-300" : "text-[#8B93A3]"} />
+        <span className="text-sm text-[#B5BCC9]">{label}</span>
+      </div>
+      <div className={`text-2xl font-semibold ${isAccent ? "text-amber-200" : "text-white"}`}>{value}</div>
+      <div className="mt-1 text-xs text-[#8B93A3]">{sub}</div>
+    </div>
+  );
+}
+
+function Rule({ icon: Icon, title, text }: { icon: typeof Wallet; title: string; text: string }) {
+  return (
+    <div className="flex gap-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#151B26]">
+        <Icon size={15} className="text-[#8B93A3]" />
+      </div>
+      <div>
+        <div className="text-sm font-medium text-white">{title}</div>
+        <div className="mt-0.5 text-xs leading-snug text-[#8B93A3]">{text}</div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div>
+      <div className="mb-1 text-xs text-[#8B93A3]">{label}</div>
+      <div className={`text-white ${mono ? "font-mono" : ""}`}>{value}</div>
+    </div>
   );
 }

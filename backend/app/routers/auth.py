@@ -16,7 +16,8 @@ class LoginRequest(BaseModel):
 
 @router.post("/login")
 def login(body: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == body.email).first()
+    email = body.email.strip().lower()
+    user = db.query(User).filter(User.email == email).first()
     if not user or not bcrypt.checkpw(body.password.encode(), user.password_hash.encode()):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

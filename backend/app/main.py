@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, dashboard, artists, tracks, analytics, transactions, payments, approvals, syncs, uploads
+from app.routers import ai, auth, dashboard, artists, tracks, analytics, transactions, payments, approvals, syncs, uploads
 
 app = FastAPI(title="Kamik Label Portal API", version="1.0.0")
 
@@ -23,6 +23,7 @@ def healthcheck():
 
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(artists.router, prefix="/api/artists", tags=["artists"])
 app.include_router(tracks.router, prefix="/api/tracks", tags=["tracks"])

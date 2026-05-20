@@ -41,22 +41,29 @@ def list_tracks(
         revenue = db.query(func.sum(TrackStat.artist_revenue)).filter(TrackStat.track_id == t.id).scalar() or 0
 
         platform_streams: dict[str, int] = {}
+        platform_revenue: dict[str, float] = {}
         for stat in t.stats:
             code = stat.platform.code if stat.platform else "other"
             platform_streams[code] = platform_streams.get(code, 0) + stat.streams
+            platform_revenue[code] = round(platform_revenue.get(code, 0.0) + float(stat.artist_revenue), 2)
+
+        streams_int = int(streams)
+        rpm = round(float(revenue) / streams_int * 1000, 2) if streams_int else 0.0
 
         result.append({
             "id": t.id,
             "title": t.title,
             "duration": t.duration,
             "release_date": t.release_date.isoformat() if t.release_date else None,
-            "streams": int(streams),
+            "streams": streams_int,
             "revenue": float(revenue),
+            "rpm": rpm,
             "trend": 0,
             "cover_url": t.cover_url,
             "status": t.status,
             "isrc": t.isrc,
             "platform_streams": platform_streams,
+            "platform_revenue": platform_revenue,
         })
 
     return sorted(result, key=lambda x: x["streams"], reverse=True)

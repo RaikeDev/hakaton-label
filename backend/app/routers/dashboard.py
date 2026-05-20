@@ -85,6 +85,10 @@ def get_dashboard(artist_id: int = Query(1), db: Session = Depends(get_db)):
             "artist_share_percent": float(artist.artist_share_percent),
             "contract_since": artist.contract_since.isoformat() if artist.contract_since else None,
             "avatar_url": artist.avatar_url,
+            "datalens_url": artist.datalens_url,
+            "bank_name": artist.bank_name,
+            "account_number": artist.account_number,
+            "recipient_name": artist.recipient_name,
         },
         "summary": {
             "total_streams": int(total_streams),

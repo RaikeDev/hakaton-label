@@ -7,6 +7,7 @@ import sys
 from datetime import date
 
 import bcrypt
+from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -29,6 +30,7 @@ def _hash(password: str) -> str:
 
 def seed():
     Base.metadata.create_all(bind=engine)
+    ensure_schema()
 
     with Session(engine) as db:
         existing_artist = db.query(Artist).first()
@@ -56,7 +58,11 @@ def seed():
             label_name="Kamik",
             contract_since=date(2022, 3, 15),
             artist_share_percent=70,
-            avatar_url="https://images.unsplash.com/photo-1516575334481-f85287c2c82d?w=120&h=120&fit=crop&crop=face",
+            avatar_url="https://images.unsplash.com/photo-1516575334481-f85287c2c82d?w=160&h=160&fit=crop&crop=face",
+            datalens_url=None,
+            bank_name="Сбербанк",
+            account_number="40817 810 4 0000 1234521",
+            recipient_name="Ковалев Максим Андреевич",
         )
         db.add(artist)
         db.flush()
@@ -198,6 +204,7 @@ def seed():
             Payment(artist_id=artist.id, period="Ноябрь 2024", gross_amount=95_000, commission=9_500, tax=7_410, net_payout=78_090, status="paid", paid_date=date(2024, 12, 10)),
             Payment(artist_id=artist.id, period="Октябрь 2024", gross_amount=79_500, commission=7_950, tax=6_201, net_payout=65_349, status="paid", paid_date=date(2024, 11, 10)),
             Payment(artist_id=artist.id, period="Февраль 2025", gross_amount=74_700, commission=None, tax=None, net_payout=62_748, status="pending", paid_date=None),
+            Payment(artist_id=artist.id, period="Март 2025", gross_amount=132_600, commission=13_260, tax=9_306, net_payout=110_034, status="approved", paid_date=None),
         ]
         db.add_all(payments)
 
@@ -348,6 +355,12 @@ def repair_demo_data(db: Session):
         artist.real_name = "Максим Ковалев"
         artist.genre = "Hip-Hop / R&B"
         artist.label_name = "Kamik"
+        if not artist.bank_name:
+            artist.bank_name = "Сбербанк"
+        if not artist.account_number:
+            artist.account_number = "40817 810 4 0000 1234521"
+        if not artist.recipient_name:
+            artist.recipient_name = "Ковалев Максим Андреевич"
 
     track_titles = {
         "RURAM2412001": "Северный ветер",
@@ -403,6 +416,24 @@ def repair_demo_data(db: Session):
         if payment:
             payment.period = period
 
+    artist = db.query(Artist).filter(Artist.stage_name == "MAKO").first()
+    if artist:
+        demo_payment = db.query(Payment).filter(
+            Payment.artist_id == artist.id,
+            Payment.period == "Март 2025",
+        ).first()
+        if not demo_payment:
+            db.add(Payment(
+                artist_id=artist.id,
+                period="Март 2025",
+                gross_amount=132_600,
+                commission=13_260,
+                tax=9_306,
+                net_payout=110_034,
+                status="approved",
+                paid_date=None,
+            ))
+
     approvals = {
         (date(2025, 3, 15), "in_review"): ("EP «Весна 2025»", "Утро в Москве|Таяние|Апрель", "DistroKid"),
         (date(2025, 2, 20), "approved"): ("Сингл «Цветение»", "Цветение", "ФОНД"),
@@ -446,6 +477,22 @@ def repair_demo_data(db: Session):
             sync_case.director = director
 
     db.commit()
+
+
+def ensure_schema():
+    inspector = inspect(engine)
+    artist_columns = {column["name"] for column in inspector.get_columns("artists")}
+    new_columns = {
+        "datalens_url": "VARCHAR(1000)",
+        "bank_name": "VARCHAR(120)",
+        "account_number": "VARCHAR(50)",
+        "recipient_name": "VARCHAR(160)",
+    }
+    missing = {name: ddl for name, ddl in new_columns.items() if name not in artist_columns}
+    if missing:
+        with engine.begin() as connection:
+            for name, ddl in missing.items():
+                connection.execute(text(f"ALTER TABLE artists ADD COLUMN {name} {ddl}"))
 
 
 if __name__ == "__main__":

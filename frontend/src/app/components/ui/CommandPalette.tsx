@@ -15,13 +15,15 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ElementType } from "react";
 
+type SearchGroup = "Разделы" | "Действия" | "Треки";
+
 type SearchResult = {
   id: string;
   title: string;
   subtitle: string;
   page: string;
   icon: ElementType;
-  group: "Разделы" | "Действия" | "Треки";
+  group: SearchGroup;
   keywords: string;
 };
 
@@ -30,7 +32,7 @@ const sectionResults: SearchResult[] = [
   { id: "catalog", title: "Каталог треков", subtitle: "Треки, ISRC, доход и статусы", page: "catalog", icon: Music, group: "Разделы", keywords: "каталог треки isrc релизы музыка" },
   { id: "analytics", title: "Аналитика", subtitle: "Платформы, география и эффективность", page: "analytics", icon: BarChart2, group: "Разделы", keywords: "аналитика графики платформы география" },
   { id: "ai-insights", title: "Инсайты", subtitle: "Рекомендации по каталогу", page: "ai-insights", icon: Lightbulb, group: "Разделы", keywords: "инсайты рекомендации риски возможности ai" },
-  { id: "syncs", title: "Синхронизации", subtitle: "Кино, реклама, договоры и sync fees", page: "syncs", icon: Film, group: "Разделы", keywords: "синхронизации sync кино реклама сериал" },
+  { id: "syncs", title: "Синхронизации", subtitle: "Кино, реклама, договоры и лицензионные сборы", page: "syncs", icon: Film, group: "Разделы", keywords: "синхронизации sync кино реклама сериал" },
   { id: "balance", title: "Баланс", subtitle: "Транзакции и движение денег", page: "balance", icon: Wallet, group: "Разделы", keywords: "баланс транзакции операции деньги" },
   { id: "approvals", title: "Согласования", subtitle: "Релизы и проверки дистрибьютора", page: "approvals", icon: CheckSquare, group: "Разделы", keywords: "согласования релизы проверки статус" },
   { id: "payments", title: "Выплаты", subtitle: "Реестр выплат и переводов", page: "payments", icon: CreditCard, group: "Разделы", keywords: "выплаты платежи переводы роялти" },
@@ -160,7 +162,7 @@ export function CommandPalette({ isOpen, onClose, onNavigate, role = "artist", t
     onClose();
   }
 
-  const groupedResults = results.reduce<Record<SearchResult["group"], SearchResult[]>>(
+  const groupedResults = results.reduce<Record<SearchGroup, SearchResult[]>>(
     (acc, result) => {
       acc[result.group].push(result);
       return acc;

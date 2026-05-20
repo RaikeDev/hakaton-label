@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchApprovals, updateApprovalStatus } from "../api/approvalsApi";
+import { CreateApprovalPayload, createApproval, fetchApprovals, updateApprovalStatus } from "../api/approvalsApi";
 import { useAuth } from "../context/AuthContext";
 import { getArtistId } from "../lib/auth";
 
@@ -18,5 +18,10 @@ export function useApprovals() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["approvals"] }),
   });
 
-  return { ...query, updateStatus };
+  const createMutation = useMutation({
+    mutationFn: (payload: CreateApprovalPayload) => createApproval(artistId, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["approvals"] }),
+  });
+
+  return { ...query, updateStatus, createMutation };
 }

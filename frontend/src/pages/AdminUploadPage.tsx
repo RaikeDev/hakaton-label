@@ -1,8 +1,20 @@
-﻿import { useState, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { uploadRoyaltyReport } from "../api/uploadsApi";
-import { Upload, CheckCircle, AlertCircle, FileSpreadsheet, X } from "lucide-react";
-import { fmtNumber, fmtRub } from "../lib/format";
+﻿import { useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle,
+  Database,
+  FileSpreadsheet,
+  History,
+  PlayCircle,
+  ReceiptText,
+  Upload,
+  WalletCards,
+  X,
+} from "lucide-react";
+import { fetchLastUpload, uploadDemoRoyaltyReport, uploadRoyaltyReport } from "../api/uploadsApi";
+import { fmtNumber } from "../lib/format";
 
 interface UploadResult {
   upload_id: number;
@@ -13,171 +25,360 @@ interface UploadResult {
   errors: Array<{ row: number; message: string }>;
   created_transactions: number;
   created_track_stats: number;
+  updated_track_stats: number;
   message?: string;
 }
 
+const expectedColumns = [
+  "artist_name",
+  "track_title",
+  "isrc",
+  "platform",
+  "period",
+  "streams",
+  "gross_revenue",
+  "currency",
+];
+
+const flow = [
+  {
+    icon: FileSpreadsheet,
+    title: "Отчет платформы",
+    text: "CSV или Excel с треками, платформами, стримами и начисленной выручкой.",
+  },
+  {
+    icon: Database,
+    title: "Расчет роялти",
+    text: "Система сопоставляет артиста, трек и платформу, затем считает долю артиста и лейбла.",
+  },
+  {
+    icon: WalletCards,
+    title: "Финансы",
+    text: "В каталоге обновляется статистика, а в балансе появляются доходные операции к выплате.",
+  },
+];
+
+const failedResult: UploadResult = {
+  upload_id: 0,
+  status: "failed",
+  rows_total: 0,
+  rows_success: 0,
+  rows_failed: 0,
+  errors: [],
+  created_transactions: 0,
+  created_track_stats: 0,
+  updated_track_stats: 0,
+  message: "Не удалось обработать отчет. Проверьте формат файла и повторите загрузку.",
+};
+
 export function AdminUploadPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<"file" | "demo" | null>(null);
   const [result, setResult] = useState<UploadResult | null>(null);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
+  const { data: lastUpload } = useQuery({ queryKey: ["last-upload"], queryFn: fetchLastUpload });
 
-  function handleFile(f: File) {
-    setFile(f);
+  function refreshReports() {
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.invalidateQueries({ queryKey: ["tracks"] });
+    qc.invalidateQueries({ queryKey: ["transactions"] });
+    qc.invalidateQueries({ queryKey: ["analytics"] });
+    qc.invalidateQueries({ queryKey: ["last-upload"] });
+  }
+
+  function handleFile(nextFile: File) {
+    setFile(nextFile);
     setResult(null);
   }
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault();
     setDragging(false);
-    const f = e.dataTransfer.files[0];
-    if (f) handleFile(f);
+    const nextFile = e.dataTransfer.files[0];
+    if (nextFile) handleFile(nextFile);
   }
 
-  async function handleUpload() {
-    if (!file) return;
-    setLoading(true);
+  async function runUpload(mode: "file" | "demo") {
+    if (mode === "file" && !file) return;
+    setLoading(mode);
     try {
-      const data = await uploadRoyaltyReport(file);
+      const data = mode === "file" && file ? await uploadRoyaltyReport(file) : await uploadDemoRoyaltyReport();
       setResult(data);
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      qc.invalidateQueries({ queryKey: ["tracks"] });
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["analytics"] });
-    } catch (err: any) {
-      setResult({ upload_id: 0, status: "failed", rows_total: 0, rows_success: 0, rows_failed: 0, errors: [], created_transactions: 0, created_track_stats: 0, message: "Ошибка загрузки файла" });
+      refreshReports();
+    } catch {
+      setResult(failedResult);
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   }
 
+  const isSuccess = result?.status === "completed";
+
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-white text-2xl font-bold">Загрузка отчёта по роялти</h1>
-        <p className="text-[#6C6890] text-sm mt-1">
-          Импорт CSV/Excel-файла от платформ или выгрузки из Яндекс DataLens
-        </p>
-      </div>
-
-      {/* Format info */}
-      <div className="rounded-2xl p-4 border border-[#1C1A3B] bg-[#0D1020]">
-        <p className="text-[#9B98BC] text-sm font-semibold mb-2">Ожидаемые колонки файла:</p>
-        <div className="flex flex-wrap gap-2">
-          {["artist_name", "track_title", "isrc", "platform", "period", "streams", "gross_revenue", "currency"].map(col => (
-            <span key={col} className="text-xs bg-[#0F0D22] border border-[#1C1A3B] text-violet-300 rounded px-2 py-0.5 font-mono">{col}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Drop zone */}
-      <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-        onClick={() => inputRef.current?.click()}
-        className={`rounded-2xl border-2 border-dashed p-10 text-center cursor-pointer transition-colors ${
-          dragging ? "border-violet-500 bg-violet-500/5" : "border-[#1C1A3B] bg-[#09071C] hover:border-violet-600/50"
-        }`}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-        />
-        {file ? (
-          <div className="flex items-center justify-center gap-3">
-            <FileSpreadsheet size={32} className="text-emerald-400" />
-            <div className="text-left">
-              <p className="text-white font-medium">{file.name}</p>
-              <p className="text-[#6C6890] text-sm">{(file.size / 1024).toFixed(1)} KB</p>
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); }}
-              className="ml-4 text-[#4A4469] hover:text-red-400 transition-colors"
-            >
-              <X size={18} />
-            </button>
+    <div className="flex-1 overflow-y-auto bg-[#0B0D12]">
+      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-6 p-6">
+        <header className="flex flex-col gap-4 border-b border-[#202633] pb-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-sm font-medium text-[#8B93A3]">Финансовый импорт</p>
+            <h1 className="mt-1 text-2xl font-semibold text-white">Загрузка отчетов по роялти</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#A5ADBA]">
+              Раздел превращает отчет дистрибьютора в рабочие данные продукта: стримы по трекам,
+              начисления артиста, доходы лейбла и операции в балансе.
+            </p>
           </div>
-        ) : (
-          <>
-            <Upload size={32} className="text-[#4A4469] mx-auto mb-3" />
-            <p className="text-white font-medium">Перетащите файл или нажмите для выбора</p>
-            <p className="text-[#6C6890] text-sm mt-1">CSV, XLSX, XLS</p>
-          </>
+
+          <button
+            onClick={() => runUpload("demo")}
+            disabled={Boolean(loading)}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#2F6FED] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#3D7EFF] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <PlayCircle size={17} />
+            {loading === "demo" ? "Обрабатываем демо-отчет..." : "Запустить демо-импорт"}
+          </button>
+        </header>
+
+        <section className="grid gap-4 lg:grid-cols-3">
+          {flow.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.title} className="rounded-lg border border-[#202633] bg-[#10141D] p-4">
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#151B26] text-[#6FA1FF]">
+                    <Icon size={18} />
+                  </div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#747D8C]">Шаг {index + 1}</div>
+                </div>
+                <h2 className="text-sm font-semibold text-white">{item.title}</h2>
+                <p className="mt-2 text-sm leading-5 text-[#8B93A3]">{item.text}</p>
+              </div>
+            );
+          })}
+        </section>
+
+        {lastUpload && (
+          <section className="rounded-lg border border-[#202633] bg-[#10141D] p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <History size={16} className="text-[#6FA1FF]" />
+              <h2 className="text-base font-semibold text-white">Последний импорт</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <LastUploadStat
+                label="Файл"
+                value={lastUpload.filename}
+                hint={lastUpload.created_at ? new Date(lastUpload.created_at).toLocaleString("ru-RU") : undefined}
+              />
+              <LastUploadStat label="Строк обработано" value={fmtNumber(lastUpload.rows_success)} hint={`из ${fmtNumber(lastUpload.rows_total)}`} />
+              <LastUploadStat label="Ошибок" value={fmtNumber(lastUpload.rows_failed)} tone={lastUpload.rows_failed > 0 ? "text-red-300" : "text-emerald-300"} />
+              <LastUploadStat
+                label="Статус"
+                value={lastUpload.status === "completed" ? "Завершен" : "С ошибками"}
+                tone={lastUpload.status === "completed" ? "text-emerald-300" : "text-amber-300"}
+              />
+            </div>
+          </section>
         )}
-      </div>
 
-      {file && !result && (
-        <button
-          onClick={handleUpload}
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 text-white font-semibold rounded-xl py-3 transition-colors"
-        >
-          {loading ? "Обрабатываем файл..." : "Загрузить и обработать"}
-        </button>
-      )}
-
-      {/* Result */}
-      {result && (
-        <div className={`rounded-2xl border p-5 ${
-          result.status === "completed" ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5"
-        }`}>
-          <div className="flex items-center gap-3 mb-4">
-            {result.status === "completed"
-              ? <CheckCircle size={24} className="text-emerald-400" />
-              : <AlertCircle size={24} className="text-red-400" />
-            }
-            <div>
-              <p className="text-white font-semibold">
-                {result.status === "completed" ? "Файл обработан успешно" : "Ошибка обработки"}
+        <section className="grid gap-5 xl:grid-cols-[1fr_360px]">
+          <div className="rounded-lg border border-[#202633] bg-[#10141D]">
+            <div className="border-b border-[#202633] px-5 py-4">
+              <h2 className="text-base font-semibold text-white">Импорт файла</h2>
+              <p className="mt-1 text-sm text-[#8B93A3]">
+                Выберите CSV/XLSX отчет. Для презентации подойдет файл `demo-data/sample_royalty_report_upload_excel.csv`.
               </p>
-              {result.message && <p className="text-[#9B98BC] text-sm">{result.message}</p>}
+            </div>
+
+            <div className="p-5">
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={onDrop}
+                onClick={() => inputRef.current?.click()}
+                className={`cursor-pointer rounded-lg border border-dashed p-7 transition-colors ${
+                  dragging ? "border-[#6FA1FF] bg-[#163151]" : "border-[#2A3242] bg-[#0B0F16] hover:border-[#3A465C]"
+                }`}
+              >
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  className="hidden"
+                  onChange={(e) => {
+                    const nextFile = e.target.files?.[0];
+                    if (nextFile) handleFile(nextFile);
+                  }}
+                />
+
+                {file ? (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-300">
+                      <FileSpreadsheet size={22} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-white">{file.name}</p>
+                      <p className="mt-1 text-xs text-[#8B93A3]">{(file.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFile(null);
+                        setResult(null);
+                      }}
+                      className="rounded-md p-2 text-[#8B93A3] hover:bg-red-500/10 hover:text-red-300"
+                      aria-label="Убрать файл"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center text-center">
+                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-md bg-[#151B26] text-[#8B93A3]">
+                      <Upload size={22} />
+                    </div>
+                    <p className="text-sm font-semibold text-white">Сначала выберите CSV/XLSX отчет</p>
+                    <p className="mt-1 max-w-md text-sm text-[#8B93A3]">
+                      После выбора файла станет активна кнопка обработки. Система отправит файл на сервер и пересчитает роялти.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => runUpload("file")}
+                disabled={Boolean(loading) || !file}
+                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-white text-sm font-semibold text-[#0B0D12] transition-colors hover:bg-[#E7EAF0] disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <Upload size={17} />
+                {loading === "file" ? "Загружаем и считаем отчет..." : file ? "Загрузить и обработать" : "Сначала выберите файл"}
+              </button>
+
+              <div className="mt-4 rounded-lg border border-[#202633] bg-[#0B0F16] p-4">
+                <p className="text-sm font-semibold text-white">Что делает кнопка</p>
+                <div className="mt-3 grid gap-2 text-sm text-[#A5ADBA] md:grid-cols-3">
+                  <div className="flex gap-2"><ArrowRight size={15} className="mt-0.5 shrink-0 text-[#6FA1FF]" /><span>Отправляет выбранный файл в backend.</span></div>
+                  <div className="flex gap-2"><ArrowRight size={15} className="mt-0.5 shrink-0 text-[#6FA1FF]" /><span>Проверяет колонки, артиста, ISRC и платформу.</span></div>
+                  <div className="flex gap-2"><ArrowRight size={15} className="mt-0.5 shrink-0 text-[#6FA1FF]" /><span>Обновляет статистику, баланс и доходные транзакции.</span></div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {result.rows_total > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              {[
-                { label: "Всего строк", value: fmtNumber(result.rows_total) },
-                { label: "Успешно", value: fmtNumber(result.rows_success), ok: true },
-                { label: "Ошибок", value: fmtNumber(result.rows_failed), err: result.rows_failed > 0 },
-                { label: "Транзакций создано", value: fmtNumber(result.created_transactions) },
-              ].map(({ label, value, ok, err }) => (
-                <div key={label} className="rounded-xl p-3 bg-[#0F0D22] border border-[#1C1A3B]">
-                  <p className={`text-xl font-bold ${ok ? "text-emerald-400" : err ? "text-red-400" : "text-white"}`}>{value}</p>
-                  <p className="text-[#6C6890] text-xs mt-0.5">{label}</p>
+          <aside className="rounded-lg border border-[#202633] bg-[#10141D]">
+            <div className="border-b border-[#202633] px-5 py-4">
+              <h2 className="text-base font-semibold text-white">Формат отчета</h2>
+              <p className="mt-1 text-sm text-[#8B93A3]">Эти колонки обязательны для расчета.</p>
+            </div>
+            <div className="space-y-2 p-5">
+              {expectedColumns.map((col) => (
+                <div key={col} className="flex items-center justify-between rounded-md border border-[#202633] bg-[#0B0F16] px-3 py-2">
+                  <span className="font-mono text-xs text-[#C5CBD6]">{col}</span>
+                  <CheckCircle size={14} className="text-emerald-300" />
                 </div>
               ))}
             </div>
-          )}
+          </aside>
+        </section>
 
-          {result.errors.length > 0 && (
-            <div>
-              <p className="text-[#9B98BC] text-sm font-semibold mb-2">Ошибки ({result.errors.length}):</p>
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {result.errors.map((e, i) => (
-                  <div key={i} className="flex gap-2 text-sm">
-                    <span className="text-[#6C6890] shrink-0">Строка {e.row}:</span>
-                    <span className="text-red-400">{e.message}</span>
+        {result && (
+          <section className={`rounded-lg border bg-[#10141D] ${isSuccess ? "border-emerald-500/30" : "border-red-500/30"}`}>
+            <div className="flex flex-col gap-4 border-b border-[#202633] px-5 py-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-md ${isSuccess ? "bg-emerald-500/10 text-emerald-300" : "bg-red-500/10 text-red-300"}`}>
+                  {isSuccess ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-white">{isSuccess ? "Отчет обработан" : "Отчет не обработан"}</h2>
+                  {result.message && <p className="mt-1 text-sm text-[#A5ADBA]">{result.message}</p>}
+                </div>
+              </div>
+
+              {isSuccess && (
+                <div className="flex items-center gap-2 rounded-md border border-[#2A3242] bg-[#0B0F16] px-3 py-2 text-xs text-[#A5ADBA]">
+                  <ReceiptText size={15} className="text-[#6FA1FF]" />
+                  Данные обновлены в финансах и аналитике
+                </div>
+              )}
+            </div>
+
+            {result.rows_total > 0 && (
+              <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                {[
+                  { label: "Строк в отчете", value: result.rows_total },
+                  { label: "Успешно", value: result.rows_success, tone: "text-emerald-300" },
+                  { label: "Ошибок", value: result.rows_failed, tone: result.rows_failed > 0 ? "text-red-300" : "text-white" },
+                  { label: "Новая статистика", value: result.created_track_stats },
+                  { label: "Обновлено строк", value: result.updated_track_stats },
+                  { label: "Транзакций", value: result.created_transactions },
+                ].map(({ label, value, tone }) => (
+                  <div key={label} className="rounded-lg border border-[#202633] bg-[#0B0F16] p-4">
+                    <p className={`text-2xl font-semibold ${tone ?? "text-white"}`}>{fmtNumber(value)}</p>
+                    <p className="mt-1 text-xs text-[#8B93A3]">{label}</p>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
 
-          <button
-            onClick={() => { setFile(null); setResult(null); }}
-            className="mt-4 text-sm text-[#6C6890] hover:text-white transition-colors"
-          >
-            Загрузить ещё один файл
-          </button>
-        </div>
-      )}
+            {isSuccess && (
+              <div className="grid gap-3 border-t border-[#202633] px-5 py-4 md:grid-cols-3">
+                {[
+                  "Каталог получил новые стримы и выручку по трекам.",
+                  "Баланс артиста получил доходные операции по роялти.",
+                  "Повторная загрузка обновит период без дублей.",
+                ].map((text) => (
+                  <div key={text} className="flex items-center gap-2 text-sm text-[#A5ADBA]">
+                    <ArrowRight size={15} className="shrink-0 text-[#6FA1FF]" />
+                    <span>{text}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {result.errors.length > 0 && (
+              <div className="border-t border-[#202633] p-5">
+                <p className="mb-2 text-sm font-semibold text-white">Ошибки в строках</p>
+                <div className="max-h-48 overflow-y-auto space-y-1 rounded-lg border border-red-500/20 bg-red-500/5 p-3">
+                  {result.errors.map((error, index) => (
+                    <div key={`${error.row}-${index}`} className="flex gap-2 text-sm">
+                      <span className="shrink-0 text-[#A5ADBA]">Строка {error.row}:</span>
+                      <span className="text-red-200">{error.message}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="border-t border-[#202633] px-5 py-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setFile(null);
+                  setResult(null);
+                }}
+                className="text-sm font-medium text-[#8B93A3] hover:text-white"
+              >
+                Сбросить результат
+              </button>
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LastUploadStat({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: string }) {
+  return (
+    <div className="rounded-lg border border-[#202633] bg-[#0B0F16] p-4">
+      <p className="text-xs text-[#8B93A3]">{label}</p>
+      <p className={`mt-1 truncate text-lg font-semibold ${tone ?? "text-white"}`} title={value}>
+        {value}
+      </p>
+      {hint && <p className="mt-0.5 truncate text-xs text-[#747D8C]">{hint}</p>}
     </div>
   );
 }

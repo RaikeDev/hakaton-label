@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -7,9 +9,25 @@ from app.models.approval import Approval, ApprovalStep
 
 router = APIRouter()
 
+DEFAULT_STEPS = [
+    "Загрузка материала",
+    "Мастеринг и QC",
+    "Согласование лейбла",
+    "Отправка дистрибьютору",
+    "Проверка платформами",
+    "Публикация",
+]
+
 
 class StatusUpdate(BaseModel):
     status: str
+
+
+class ApprovalCreate(BaseModel):
+    title: str
+    distributor: str | None = None
+    tracks: list[str] = []
+    planned_release: date | None = None
 
 
 @router.get("")
@@ -21,6 +39,39 @@ def list_approvals(artist_id: int = Query(1), db: Session = Depends(get_db)):
         .all()
     )
     return [_serialize(a) for a in approvals]
+
+
+@router.post("")
+def create_approval(body: ApprovalCreate, artist_id: int = Query(1), db: Session = Depends(get_db)):
+    title = body.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Укажите название релиза")
+
+    tracks = [t.strip() for t in body.tracks if t.strip()]
+    approval = Approval(
+        artist_id=artist_id,
+        title=title,
+        tracks_list="|".join(tracks) if tracks else None,
+        distributor=(body.distributor or "").strip() or None,
+        status="in_review",
+        submitted_date=date.today(),
+        planned_release_date=body.planned_release,
+    )
+    db.add(approval)
+    db.flush()
+
+    for position, step_name in enumerate(DEFAULT_STEPS):
+        db.add(ApprovalStep(
+            approval_id=approval.id,
+            step_name=step_name,
+            status="done" if position == 0 else "pending",
+            date=date.today() if position == 0 else None,
+            position=position,
+        ))
+
+    db.commit()
+    db.refresh(approval)
+    return _serialize(approval)
 
 
 @router.patch("/{approval_id}/status")

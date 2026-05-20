@@ -23,6 +23,8 @@ import {
   YAxis,
 } from "recharts";
 import { useDashboard } from "../../hooks/useDashboard";
+import { useApprovals } from "../../hooks/useApprovals";
+import { coverAt } from "../../lib/cover";
 
 function fmtRub(n: number) {
   return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(n);
@@ -102,6 +104,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }) {
   const { data, isLoading, isError } = useDashboard();
+  const { data: approvalsRaw = [] } = useApprovals();
+  const approvals = approvalsRaw as any[];
+  const approvalCounts = {
+    in_review: approvals.filter((a) => a.status === "in_review").length,
+    approved: approvals.filter((a) => a.status === "approved").length,
+    changes_requested: approvals.filter((a) => a.status === "changes_requested").length,
+  };
 
   if (isLoading) {
     return (
@@ -257,11 +266,12 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                 <div key={track.id} className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-[#151B26]">
                   <span className="w-5 shrink-0 text-center font-mono text-sm text-[#747D8C]">{idx + 1}</span>
                   <img
-                    src={track.cover_url ?? ""}
+                    src={coverAt(track.cover_url, 96)}
                     alt={track.title}
+                    loading="lazy"
                     className="h-9 w-9 shrink-0 rounded-md object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(track.title)}&background=151B26&color=fff&size=36`;
+                      (e.target as HTMLImageElement).style.visibility = "hidden";
                     }}
                   />
                   <div className="min-w-0 flex-1">
@@ -304,9 +314,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
 
           <SidePanel title="Согласования" action="Все" onAction={() => onNavigate("approvals")}>
             <div className="space-y-3">
-              <StatusLine icon={Clock} label="В работе" value="0" tone="amber" />
-              <StatusLine icon={CheckCircle} label="Одобрено" value="0" tone="green" />
-              <StatusLine icon={AlertCircle} label="Требуют внимания" value="0" tone="red" />
+              <StatusLine icon={Clock} label="На рассмотрении" value={String(approvalCounts.in_review)} tone="amber" />
+              <StatusLine icon={CheckCircle} label="Опубликовано" value={String(approvalCounts.approved)} tone="green" />
+              <StatusLine icon={AlertCircle} label="Требуют правок" value={String(approvalCounts.changes_requested)} tone="red" />
             </div>
           </SidePanel>
         </div>

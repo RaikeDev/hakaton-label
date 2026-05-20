@@ -74,7 +74,7 @@ export function LoginPage() {
                 Отчеты, выплаты и каталог лейбла в одном интерфейсе
               </h1>
               <p className="mt-4 text-sm leading-6 text-[#A5ADBA]">
-                Доступ для артистов и команды лейбла с разделением ролей и операций.
+                Доступ для артистов и команды лейбла с разделением ролей, финансовых операций и отчетности.
               </p>
             </div>
 
@@ -143,7 +143,7 @@ export function LoginPage() {
                 disabled={loading}
                 className="h-11 w-full rounded-md bg-[#2F6FED] text-sm font-semibold text-white transition-colors hover:bg-[#3D7EFF] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading ? "Вход..." : "Войти"}
+                {loading ? "Входим..." : "Войти"}
               </button>
             </form>
 

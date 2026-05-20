@@ -14,12 +14,14 @@ import {
   Wallet,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useDashboard } from "../../hooks/useDashboard";
+import { Avatar } from "./ui/InitialsAvatar";
 
 const artistNav = [
   { id: "dashboard", icon: BarChart3, label: "Дашборд" },
   { id: "catalog", icon: Music2, label: "Каталог треков" },
   { id: "analytics", icon: Disc3, label: "Аналитика" },
-  { id: "ai-insights", icon: Sparkles, label: "AI-инсайты" },
+  { id: "ai-insights", icon: Sparkles, label: "Инсайты" },
   { id: "syncs", icon: Film, label: "Синхронизации" },
   { id: "balance", icon: Wallet, label: "Баланс" },
   { id: "approvals", icon: CheckSquare, label: "Согласования" },
@@ -30,7 +32,7 @@ const adminNav = [
   { id: "dashboard", icon: BarChart3, label: "Обзор лейбла" },
   { id: "artists", icon: Users, label: "Артисты" },
   { id: "upload", icon: Upload, label: "Загрузка отчетов" },
-  { id: "ai-insights", icon: Sparkles, label: "AI-инсайты" },
+  { id: "ai-insights", icon: Sparkles, label: "Инсайты" },
   { id: "admin-payments", icon: CreditCard, label: "Выплаты" },
   { id: "admin-approvals", icon: CheckSquare, label: "Согласования" },
   { id: "admin-syncs", icon: Film, label: "Синхронизации" },
@@ -46,6 +48,8 @@ export function Sidebar({ active, onNavigate }: SidebarProps) {
   const isAdmin = user?.role === "admin";
   const navItems = isAdmin ? adminNav : artistNav;
   const displayName = user?.name ?? "-";
+  const { data: dashData } = useDashboard();
+  const avatarUrl = isAdmin ? null : (dashData?.artist?.avatar_url as string | null | undefined);
 
   function openSearch() {
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
@@ -65,9 +69,7 @@ export function Sidebar({ active, onNavigate }: SidebarProps) {
 
       <div className="mx-3 mt-3 rounded-md border border-[#202633] bg-[#111722] p-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#1A2332] text-sm font-semibold text-[#D8DEE9]">
-            {displayName.charAt(0)}
-          </div>
+          <Avatar name={displayName} src={avatarUrl} size={36} />
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold leading-none text-white">{displayName}</div>
             <div className="mt-1 text-xs text-[#8B93A3]">{isAdmin ? "Администратор" : "Артист"}</div>
@@ -100,9 +102,7 @@ export function Sidebar({ active, onNavigate }: SidebarProps) {
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className={`group flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm transition-colors ${
-                isActive
-                  ? "bg-[#1B2638] text-white"
-                  : "text-[#A5ADBA] hover:bg-[#151B26] hover:text-white"
+                isActive ? "bg-[#1B2638] text-white" : "text-[#A5ADBA] hover:bg-[#151B26] hover:text-white"
               }`}
             >
               <Icon size={17} className={isActive ? "text-[#6FA1FF]" : "text-[#667085] group-hover:text-[#A5ADBA]"} />

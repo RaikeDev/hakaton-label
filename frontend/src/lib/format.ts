@@ -1,4 +1,4 @@
-export function fmtRub(n: number) {
+﻿export function fmtRub(n: number) {
   return new Intl.NumberFormat("ru-RU", {
     style: "currency",
     currency: "RUB",
@@ -17,6 +17,6 @@ export function fmtStreams(n: number) {
 }
 
 export function fmtDate(iso: string | null | undefined) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
 }

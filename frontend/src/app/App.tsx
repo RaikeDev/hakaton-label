@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+﻿import { lazy, Suspense, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { useTracks } from "../hooks/useTracks";
 import { LoginPage } from "../pages/LoginPage";
@@ -14,6 +15,7 @@ const Syncs = lazy(() => import("./components/Syncs").then((module) => ({ defaul
 const Balance = lazy(() => import("./components/Balance").then((module) => ({ default: module.Balance })));
 const Approvals = lazy(() => import("./components/Approvals").then((module) => ({ default: module.Approvals })));
 const Payments = lazy(() => import("./components/Payments").then((module) => ({ default: module.Payments })));
+const Artists = lazy(() => import("./components/Artists").then((module) => ({ default: module.Artists })));
 const AdminUploadPage = lazy(() => import("../pages/AdminUploadPage").then((module) => ({ default: module.AdminUploadPage })));
 
 const queryClient = new QueryClient({
@@ -81,14 +83,10 @@ function AppShell() {
           {page === "approvals" && <Approvals />}
           {page === "payments" && <Payments />}
           {page === "upload" && <AdminUploadPage />}
-          {(page === "artists" || page === "admin-payments" || page === "admin-approvals" || page === "admin-syncs") && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3">
-              <p className="text-lg text-[#8B93A3]">Раздел в разработке</p>
-              <button onClick={() => setPage("upload")} className="text-sm text-[#6FA1FF] hover:text-[#8BB4FF]">
-                Загрузка отчетов
-              </button>
-            </div>
-          )}
+          {page === "artists" && <Artists onOpenUpload={() => setPage("upload")} />}
+          {page === "admin-payments" && <Payments />}
+          {page === "admin-approvals" && <Approvals />}
+          {page === "admin-syncs" && <Syncs />}
         </Suspense>
       </main>
     </div>
@@ -111,6 +109,14 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AppShell />
+        <Toaster
+          theme="dark"
+          position="bottom-right"
+          richColors
+          toastOptions={{
+            style: { background: "#10141D", border: "1px solid #202633", color: "#E5E7EB" },
+          }}
+        />
       </AuthProvider>
     </QueryClientProvider>
   );

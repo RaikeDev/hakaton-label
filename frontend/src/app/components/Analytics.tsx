@@ -1,4 +1,5 @@
-﻿import {
+﻿import { useState } from "react";
+import {
   BarChart,
   Bar,
   AreaChart,
@@ -68,7 +69,10 @@ export function Analytics() {
   const monthlyRevenue = period === "last" ? allMonths.slice(-1) : period === "quarter" ? allMonths.slice(-3) : allMonths;
   const periodLabel = periodOptions.find((option) => option.id === period)?.label ?? "3 периода";
 
-  const streamsByPlatform: any[] = (analyticsData?.platforms ?? []).map((p: any, i: number) => ({
+  const allMonths: any[] = dashData?.monthly_revenue ?? [];
+  const monthlyRevenue = period === 90 ? allMonths : period === 30 ? allMonths.slice(-3) : allMonths.slice(-1);
+
+  const streamsByPlatform: any[] = (analyticsData?.platforms ?? []).map((p: any) => ({
     name: p.platform,
     streams: p.streams,
     revenue: p.revenue,
@@ -130,6 +134,7 @@ export function Analytics() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
         {/* Monthly revenue detailed */}
         <div className="bg-[#10141D] border border-[#202633] rounded-lg p-5">
           <h2 className="text-white font-semibold mb-1">Доход по месяцам</h2>
@@ -140,7 +145,7 @@ export function Analytics() {
               <XAxis dataKey="month" tick={{ fill: "#747D8C", fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "#747D8C", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="yandex" name="Яндекс" stackId="a" fill={PLATFORM_COLORS.yandex} radius={[0, 0, 0, 0]} />
+              <Bar dataKey="yandex" name="Яндекс" stackId="a" fill={PLATFORM_COLORS.yandex} />
               <Bar dataKey="vk" name="VK" stackId="a" fill={PLATFORM_COLORS.vk} />
               <Bar dataKey="spotify" name="Spotify" stackId="a" fill={PLATFORM_COLORS.spotify} />
               <Bar dataKey="sber" name="СберЗвук" stackId="a" fill={PLATFORM_COLORS.sber} />
@@ -149,6 +154,7 @@ export function Analytics() {
           </ResponsiveContainer>
         </div>
 
+        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
         {/* Monthly streams */}
         <div className="bg-[#10141D] border border-[#202633] rounded-lg p-5">
           <h2 className="text-white font-semibold mb-1">Прослушивания по месяцам</h2>
@@ -172,13 +178,14 @@ export function Analytics() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-2 bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
         {/* Platform breakdown bar */}
         <div className="col-span-2 bg-[#10141D] border border-[#202633] rounded-lg p-5">
           <h2 className="text-white font-semibold mb-1">Прослушивания по платформам</h2>
           <p className="text-[#8B93A3] text-xs mb-4">Суммарно за все время</p>
           <div className="space-y-4">
             {streamsByPlatform.sort((a, b) => b.streams - a.streams).map((p) => {
-              const maxStreams = streamsByPlatform[0].streams;
+              const maxStreams = streamsByPlatform[0]?.streams ?? 1;
               const pct = (p.streams / maxStreams) * 100;
               return (
                 <div key={p.name}>
@@ -192,6 +199,8 @@ export function Analytics() {
                       <span className="text-[#8B93A3] text-xs ml-2">· {fmtRub(p.revenue)}</span>
                     </div>
                   </div>
+                  <div className="h-2 bg-[#1C1A3B] rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: p.color }} />
                   <div className="h-2 bg-[#202633] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all"
@@ -204,6 +213,7 @@ export function Analytics() {
           </div>
         </div>
 
+        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-5">
         {/* Geo breakdown */}
         <div className="bg-[#10141D] border border-[#202633] rounded-lg p-5">
           <h2 className="text-white font-semibold mb-1">География</h2>
@@ -218,6 +228,8 @@ export function Analytics() {
                     <span className="text-white text-xs font-semibold w-10 text-right">{g.pct}%</span>
                   </div>
                 </div>
+                <div className="h-1.5 bg-[#1C1A3B] rounded-full overflow-hidden">
+                  <div className="h-full bg-violet-500 rounded-full" style={{ width: `${g.pct}%` }} />
                 <div className="h-1.5 bg-[#202633] rounded-full overflow-hidden">
                   <div
                     className="h-full bg-[#4B8BFF] rounded-full"
@@ -257,6 +269,21 @@ export function Analytics() {
           </table>
         </div>
       </div>
+      {/* DataLens Dashboard */}
+{import.meta.env.VITE_DATALENS_URL && (
+  <div className="bg-[#10141D] border border-[#202633] rounded-lg p-5">
+    <h2 className="text-white font-semibold mb-1">DataLens — расширенная аналитика</h2>
+    <p className="text-[#8B93A3] text-xs mb-4">Интерактивные дашборды Yandex DataLens</p>
+    <iframe
+      src={import.meta.env.VITE_DATALENS_URL}
+      width="100%"
+      height="650"
+      frameBorder="0"
+      style={{ borderRadius: "10px" }}
+      allowFullScreen
+    />
+  </div>
+)}
     </div>
   );
 }

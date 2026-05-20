@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Lock, Mail } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -12,7 +13,9 @@ export function LoginPage() {
   function resolveLoginError(error: unknown) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401) return "Неверный email или пароль";
-      if (!error.response) return "Не удалось подключиться к backend. Проверьте адрес API и CORS.";
+      if (!error.response) {
+        return "Не удалось подключиться к серверу. Проверьте адрес API и CORS.";
+      }
     }
 
     return "Не удалось выполнить вход. Повторите попытку.";
@@ -23,7 +26,7 @@ export function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password.trim());
+      await login(email.trim(), password.trim());
     } catch (error) {
       setError(resolveLoginError(error));
     } finally {
@@ -49,83 +52,125 @@ export function LoginPage() {
   }
 
   return (
-    <div
-      className="flex items-center justify-center min-h-screen relative overflow-hidden"
-      style={{ background: "#06050F", color: "#E5E7EB" }}
-    >
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-violet-600/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-fuchsia-600/6 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="w-full max-w-sm relative z-10">
-        <div className="flex items-center gap-3 mb-8 justify-center">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-[0_0_24px_rgba(139,92,246,0.45)]">
-            <span className="text-white font-black text-base tracking-wider">K</span>
-          </div>
-          <div>
-            <div className="text-white font-bold text-xl leading-none tracking-wide">KAMIK</div>
-            <div className="text-[#6C6890] text-xs mt-0.5">Label Portal</div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl p-6 border border-[#1C1A3B] bg-[#09071C] shadow-[0_0_40px_rgba(139,92,246,0.08)]">
-          <h1 className="text-white font-semibold text-lg mb-6 text-center">Войти в систему</h1>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-[#9B98BC] text-sm block mb-1.5">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full bg-[#0F0D22] border border-[#1C1A3B] rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-violet-500 transition-colors"
-                placeholder="artist@kamik.ru"
-              />
-            </div>
-            <div>
-              <label className="text-[#9B98BC] text-sm block mb-1.5">Пароль</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full bg-[#0F0D22] border border-[#1C1A3B] rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-violet-500 transition-colors"
-                placeholder="••••••••"
-              />
+    <main className="min-h-screen bg-[#0B0D12] text-[#E7EAF0]">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1120px] items-center justify-center px-6 py-10">
+        <section className="grid w-full overflow-hidden rounded-lg border border-[#202633] bg-[#10141D] shadow-[0_24px_80px_rgba(0,0,0,0.28)] md:grid-cols-[1fr_420px]">
+          <div className="hidden border-r border-[#202633] bg-[#0E1118] p-10 md:flex md:flex-col md:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md border border-[#2A3242] bg-[#151B26] text-sm font-bold text-white">
+                K
+              </div>
+              <div>
+                <div className="text-base font-semibold leading-none text-white">KAMIK</div>
+                <div className="mt-1 text-xs text-[#8B93A3]">Label Portal</div>
+              </div>
             </div>
 
-            {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+            <div className="max-w-md">
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#8B93A3]">
+                Рабочий кабинет
+              </p>
+              <h1 className="mt-4 text-3xl font-semibold leading-tight text-white">
+                Отчеты, выплаты и каталог лейбла в одном интерфейсе
+              </h1>
+              <p className="mt-4 text-sm leading-6 text-[#A5ADBA]">
+                Доступ для артистов и команды лейбла с разделением ролей и операций.
+              </p>
+            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors disabled:opacity-50"
-            >
-              {loading ? "Вход..." : "Войти"}
-            </button>
-          </form>
+            <div className="grid grid-cols-3 gap-3 text-xs text-[#8B93A3]">
+              <div className="rounded-md border border-[#202633] bg-[#111722] px-3 py-2">Роялти</div>
+              <div className="rounded-md border border-[#202633] bg-[#111722] px-3 py-2">Каталог</div>
+              <div className="rounded-md border border-[#202633] bg-[#111722] px-3 py-2">Выплаты</div>
+            </div>
+          </div>
 
-          <div className="mt-5 pt-4 border-t border-[#1C1A3B]">
-            <p className="text-[#4A4469] text-xs text-center mb-3">Быстрый вход для демо</p>
-            <div className="flex gap-2">
+          <div className="p-6 sm:p-8">
+            <div className="mb-8 flex items-center gap-3 md:hidden">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md border border-[#2A3242] bg-[#151B26] text-sm font-bold text-white">
+                K
+              </div>
+              <div>
+                <div className="text-base font-semibold leading-none text-white">KAMIK</div>
+                <div className="mt-1 text-xs text-[#8B93A3]">Label Portal</div>
+              </div>
+            </div>
+
+            <div className="mb-7">
+              <h2 className="text-xl font-semibold text-white">Вход</h2>
+              <p className="mt-2 text-sm text-[#8B93A3]">Используйте рабочий email и пароль.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-[#B5BCC9]">Email</span>
+                <span className="relative block">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#667085]" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-11 w-full rounded-md border border-[#2A3242] bg-[#0B0F16] pl-10 pr-3 text-sm text-white outline-none transition-colors placeholder:text-[#586173] focus:border-[#4B8BFF]"
+                    placeholder="artist@kamik.ru"
+                  />
+                </span>
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-[#B5BCC9]">Пароль</span>
+                <span className="relative block">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#667085]" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-11 w-full rounded-md border border-[#2A3242] bg-[#0B0F16] pl-10 pr-3 text-sm text-white outline-none transition-colors placeholder:text-[#586173] focus:border-[#4B8BFF]"
+                    placeholder="Введите пароль"
+                  />
+                </span>
+              </label>
+
+              {error && (
+                <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                  {error}
+                </div>
+              )}
+
               <button
-                onClick={() => quickLogin("artist")}
+                type="submit"
                 disabled={loading}
-                className="flex-1 text-xs bg-[#0F0D22] border border-[#1C1A3B] hover:border-violet-500 text-[#9B98BC] hover:text-white rounded-lg py-2 transition-colors disabled:opacity-50"
+                className="h-11 w-full rounded-md bg-[#2F6FED] text-sm font-semibold text-white transition-colors hover:bg-[#3D7EFF] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Артист MAKO
+                {loading ? "Вход..." : "Войти"}
               </button>
-              <button
-                onClick={() => quickLogin("admin")}
-                disabled={loading}
-                className="flex-1 text-xs bg-[#0F0D22] border border-[#1C1A3B] hover:border-emerald-500 text-[#9B98BC] hover:text-white rounded-lg py-2 transition-colors disabled:opacity-50"
-              >
-                Админ лейбла
-              </button>
+            </form>
+
+            <div className="mt-6 border-t border-[#202633] pt-5">
+              <div className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-[#747D8C]">
+                Демо-доступ
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => quickLogin("artist")}
+                  disabled={loading}
+                  className="h-10 rounded-md border border-[#2A3242] bg-[#111722] text-xs font-medium text-[#C5CBD6] transition-colors hover:border-[#3A465C] hover:bg-[#151D2A] disabled:opacity-50"
+                >
+                  Артист
+                </button>
+                <button
+                  onClick={() => quickLogin("admin")}
+                  disabled={loading}
+                  className="h-10 rounded-md border border-[#2A3242] bg-[#111722] text-xs font-medium text-[#C5CBD6] transition-colors hover:border-[#3A465C] hover:bg-[#151D2A] disabled:opacity-50"
+                >
+                  Админ
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

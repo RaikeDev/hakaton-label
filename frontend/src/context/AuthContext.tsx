@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import { AuthUser, getUser, setAuth, clearAuth } from "../lib/auth";
+import { AuthUser, clearAuth, getUser, setAuth } from "../lib/auth";
 import { login as apiLogin } from "../api/authApi";
 
 interface AuthContextValue {
@@ -25,7 +25,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
-  // Quick role toggle for demo — swaps between artist@kamik.ru and admin@kamik.ru
   async function switchRole() {
     if (!user) return;
     const nextEmail = user.role === "artist" ? "admin@kamik.ru" : "artist@kamik.ru";

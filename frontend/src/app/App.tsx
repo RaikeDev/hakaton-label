@@ -1,8 +1,10 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "../context/AuthContext";
-import { Sidebar } from "./components/Sidebar";
+import { useTracks } from "../hooks/useTracks";
 import { LoginPage } from "../pages/LoginPage";
+import { Sidebar } from "./components/Sidebar";
+import { CommandPalette } from "./components/ui/CommandPalette";
 
 const Dashboard = lazy(() => import("./components/Dashboard").then((module) => ({ default: module.Dashboard })));
 const Catalog = lazy(() => import("./components/Catalog").then((module) => ({ default: module.Catalog })));
@@ -36,16 +38,39 @@ type Page =
 function AppShell() {
   const { user } = useAuth();
   const [page, setPage] = useState<Page>("dashboard");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { data: tracks = [] } = useTracks(undefined, undefined, Boolean(user));
+
+  useEffect(() => {
+    if (!user) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setIsSearchOpen((isOpen) => !isOpen);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [user]);
 
   if (!user) return <LoginPage />;
 
   return (
     <div
       className="flex h-screen w-full overflow-hidden"
-      style={{ background: "#06050F", color: "#E5E7EB", fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
+      style={{ background: "#0B0D12", color: "#E5E7EB", fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
     >
       <Sidebar active={page} onNavigate={(id) => setPage(id as Page)} />
-      <main className="flex-1 overflow-hidden flex flex-col min-w-0">
+      <CommandPalette
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onNavigate={(id) => setPage(id as Page)}
+        role={user.role}
+        tracks={tracks as Array<{ id: string | number; title: string; isrc?: string; streams?: number; revenue?: number }>}
+      />
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Suspense fallback={<PageLoader />}>
           {page === "dashboard" && <Dashboard onNavigate={(id) => setPage(id as Page)} />}
           {page === "catalog" && <Catalog />}
@@ -57,9 +82,9 @@ function AppShell() {
           {page === "payments" && <Payments />}
           {page === "upload" && <AdminUploadPage />}
           {(page === "artists" || page === "admin-payments" || page === "admin-approvals" || page === "admin-syncs") && (
-            <div className="flex-1 flex items-center justify-center flex-col gap-3">
-              <p className="text-[#6C6890] text-lg">Раздел в разработке</p>
-              <button onClick={() => setPage("upload")} className="text-sm text-violet-400 hover:text-violet-300">
+            <div className="flex flex-1 flex-col items-center justify-center gap-3">
+              <p className="text-lg text-[#8B93A3]">Раздел в разработке</p>
+              <button onClick={() => setPage("upload")} className="text-sm text-[#6FA1FF] hover:text-[#8BB4FF]">
                 Загрузка отчетов
               </button>
             </div>
@@ -72,10 +97,10 @@ function AppShell() {
 
 function PageLoader() {
   return (
-    <div className="flex-1 flex items-center justify-center">
+    <div className="flex flex-1 items-center justify-center">
       <div className="text-center">
-        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-[#6C6890] text-sm">Загружаем раздел...</p>
+        <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[#4B8BFF] border-t-transparent" />
+        <p className="text-sm text-[#8B93A3]">Загружаем раздел...</p>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-﻿import { useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Film, Filter, Search, Download, Wallet, TrendingUp, Clock } from "lucide-react";
+import { useState } from "react";
+import { ArrowDownLeft, ArrowUpRight, Clock, Download, Film, Search, TrendingUp, Wallet } from "lucide-react";
 import { useTransactions } from "../../hooks/useTransactions";
 import { useDashboard } from "../../hooks/useDashboard";
 
@@ -14,11 +14,11 @@ const typeLabels: Record<string, string> = {
   advance: "Аванс",
 };
 
-const typeColors: Record<string, string> = {
-  income: "text-emerald-400 bg-emerald-400/10",
-  payout: "text-white bg-[#1C1A3B]",
-  sync: "text-violet-400 bg-violet-400/10",
-  advance: "text-cyan-400 bg-cyan-400/10",
+const typeClasses: Record<string, string> = {
+  income: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
+  payout: "border-[#2A3242] bg-[#151B26] text-[#C5CBD6]",
+  sync: "border-[#4B8BFF]/30 bg-[#4B8BFF]/10 text-[#8BB4FF]",
+  advance: "border-cyan-400/30 bg-cyan-400/10 text-cyan-300",
 };
 
 const typeIcons: Record<string, React.ElementType> = {
@@ -28,6 +28,14 @@ const typeIcons: Record<string, React.ElementType> = {
   advance: Wallet,
 };
 
+const filters = [
+  { id: "all", label: "Все" },
+  { id: "income", label: "Роялти" },
+  { id: "payout", label: "Выплаты" },
+  { id: "sync", label: "Синхро" },
+  { id: "advance", label: "Авансы" },
+];
+
 export function Balance() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -35,7 +43,6 @@ export function Balance() {
   const { data: dashData } = useDashboard();
 
   const txList = transactions as any[];
-
   const filtered = txList.filter((tx: any) => {
     const matchFilter = filter === "all" || tx.type === filter;
     const matchSearch = tx.description.toLowerCase().includes(search.toLowerCase());
@@ -48,138 +55,152 @@ export function Balance() {
   const pendingPayout = dashData?.artist?.pending_payout ?? 0;
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+    <div className="flex-1 space-y-6 overflow-y-auto p-6">
       <div>
-        <h1 className="text-xl font-bold text-white">Баланс и транзакции</h1>
-        <p className="text-[#6C6890] text-sm mt-0.5">История всех операций по счёту</p>
+        <h1 className="text-xl font-semibold text-white">Баланс и транзакции</h1>
+        <p className="mt-1 text-sm text-[#8B93A3]">История операций по счету артиста.</p>
       </div>
 
-      {/* Balance cards */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-1 bg-violet-500/10 border border-violet-400/30 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Wallet size={18} className="text-violet-400" />
-            <span className="text-[#9B98BC] text-sm">Текущий баланс</span>
-          </div>
-          <div className="text-white text-3xl font-bold mb-1">{fmtRub(balance)}</div>
-          <div className="text-[#6C6890] text-sm">Доступно к выводу</div>
-          <div className="mt-4 pt-4 border-t border-violet-500/20">
-            <div className="text-[#9B98BC] text-xs mb-0.5">Ожидает выплаты</div>
-            <div className="text-amber-400 font-semibold">{fmtRub(pendingPayout)}</div>
-          </div>
-        </div>
-
-        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <ArrowDownLeft size={18} className="text-emerald-400" />
-            <span className="text-[#9B98BC] text-sm">Всего получено</span>
-          </div>
-          <div className="text-white text-3xl font-bold mb-1">{fmtRub(totalIncome)}</div>
-          <div className="text-[#6C6890] text-sm">Роялти + авансы + синки</div>
-          <div className="mt-4 pt-4 border-t border-[#1C1A3B]">
-            <div className="flex items-center gap-1 text-emerald-400 text-xs font-semibold">
-              <TrendingUp size={12} />
-              +8.4% vs прошлый период
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <ArrowUpRight size={18} className="text-[#9B98BC]" />
-            <span className="text-[#9B98BC] text-sm">Всего выплачено</span>
-          </div>
-          <div className="text-white text-3xl font-bold mb-1">{fmtRub(totalPaid)}</div>
-          <div className="text-[#6C6890] text-sm">Исходящие платежи</div>
-          <div className="mt-4 pt-4 border-t border-[#1C1A3B]">
-            <div className="flex items-center gap-1 text-[#6C6890] text-xs">
-              <Clock size={12} />
-              Следующая выплата: 10 марта
-            </div>
-          </div>
-        </div>
+        <SummaryCard
+          icon={Wallet}
+          label="Текущий баланс"
+          value={fmtRub(balance)}
+          sub={`Ожидает выплаты: ${fmtRub(pendingPayout)}`}
+          accent
+        />
+        <SummaryCard
+          icon={ArrowDownLeft}
+          label="Всего получено"
+          value={fmtRub(totalIncome)}
+          sub="Роялти, авансы и синхронизации"
+        />
+        <SummaryCard
+          icon={ArrowUpRight}
+          label="Всего выплачено"
+          value={fmtRub(totalPaid)}
+          sub="Закрытые исходящие платежи"
+        />
       </div>
 
-      {/* Filters + search */}
       <div className="flex items-center gap-3">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6C6890]" />
+        <label className="relative block">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Найти транзакцию..."
-            className="bg-[#0F0D22] border border-[#1C1A3B] text-white placeholder-[#4A4469] text-sm rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-violet-500/50 transition-colors w-64"
+            placeholder="Найти транзакцию"
+            className="h-10 w-72 rounded-md border border-[#2A3242] bg-[#0B0F16] pl-9 pr-3 text-sm text-white outline-none transition-colors placeholder:text-[#586173] focus:border-[#4B8BFF]"
           />
-        </div>
-        <div className="flex gap-1 bg-[#0F0D22] border border-[#1C1A3B] rounded-xl p-1">
-          {["all", "income", "payout", "sync", "advance"].map((f) => (
+        </label>
+
+        <div className="flex rounded-md border border-[#2A3242] bg-[#111722] p-1">
+          {filters.map((item) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                filter === f ? "bg-violet-600 text-white" : "text-[#6C6890] hover:text-white"
+              key={item.id}
+              onClick={() => setFilter(item.id)}
+              className={`h-8 rounded px-3 text-xs font-medium transition-colors ${
+                filter === item.id ? "bg-[#2F6FED] text-white" : "text-[#8B93A3] hover:text-white"
               }`}
             >
-              {{ all: "Все", income: "Роялти", payout: "Выплаты", sync: "Синхро", advance: "Авансы" }[f]}
+              {item.label}
             </button>
           ))}
         </div>
-        <button className="ml-auto flex items-center gap-2 px-3 py-2.5 bg-[#0F0D22] border border-[#1C1A3B] text-[#9B98BC] text-sm rounded-xl hover:border-[#252356] transition-all">
+
+        <button className="ml-auto flex h-10 items-center gap-2 rounded-md border border-[#2A3242] bg-[#111722] px-3 text-sm font-medium text-[#C5CBD6] transition-colors hover:bg-[#151D2A]">
           <Download size={14} />
           Выгрузить
         </button>
       </div>
 
-      {/* Transaction list */}
-      <div className="bg-[#0F0D22] border border-[#1C1A3B] rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-5 py-3 border-b border-[#1C1A3B] text-[#4A4469] text-xs font-medium">
+      <div className="overflow-hidden rounded-lg border border-[#202633] bg-[#10141D]">
+        <div className="grid grid-cols-[1fr_140px_120px_150px] gap-4 border-b border-[#202633] px-5 py-3 text-xs font-medium text-[#747D8C]">
           <span>Операция</span>
           <span className="text-right">Дата</span>
-          <span className="text-right w-20">Тип</span>
-          <span className="text-right w-32">Сумма</span>
+          <span className="text-right">Тип</span>
+          <span className="text-right">Сумма</span>
         </div>
-        {filtered.map((tx) => {
-          const Icon = typeIcons[tx.type] || ArrowDownLeft;
-          const colorClass = typeColors[tx.type] || "";
-          return (
-            <div key={tx.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-4 px-5 py-4 border-b border-[#1C1A3B]/50 last:border-0 hover:bg-[#130F2E]/50 transition-colors items-center">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${colorClass}`}>
-                  <Icon size={16} />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-white text-sm font-medium truncate">{tx.description}</div>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    {tx.status === "pending" && (
-                      <span className="flex items-center gap-1 text-amber-400 text-xs">
-                        <Clock size={10} />
-                        Ожидается
-                      </span>
-                    )}
-                    {tx.status === "completed" && (
-                      <span className="text-[#4A4469] text-xs">Выполнено</span>
-                    )}
+
+        {isLoading && <div className="py-12 text-center text-sm text-[#8B93A3]">Загружаем операции...</div>}
+
+        {!isLoading &&
+          filtered.map((tx) => {
+            const Icon = typeIcons[tx.type] || ArrowDownLeft;
+            const colorClass = typeClasses[tx.type] || typeClasses.payout;
+
+            return (
+              <div
+                key={tx.id}
+                className="grid grid-cols-[1fr_140px_120px_150px] items-center gap-4 border-b border-[#202633]/80 px-5 py-4 transition-colors last:border-0 hover:bg-[#151B26]/70"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${colorClass}`}>
+                    <Icon size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-white">{tx.description}</div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-xs text-[#747D8C]">
+                      {tx.status === "pending" ? (
+                        <>
+                          <Clock size={10} />
+                          Ожидается
+                        </>
+                      ) : (
+                        "Выполнено"
+                      )}
+                    </div>
                   </div>
                 </div>
+                <div className="whitespace-nowrap text-right text-sm text-[#8B93A3]">
+                  {new Date(tx.date).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" })}
+                </div>
+                <div className="flex justify-end">
+                  <span className={`rounded-md border px-2 py-1 text-xs font-medium ${colorClass}`}>
+                    {typeLabels[tx.type]}
+                  </span>
+                </div>
+                <div className={`text-right font-semibold ${tx.amount > 0 ? "text-emerald-300" : "text-white"}`}>
+                  {tx.amount > 0 ? "+" : ""}
+                  {fmtRub(Math.abs(tx.amount))}
+                </div>
               </div>
-              <div className="text-[#6C6890] text-sm whitespace-nowrap">
-                {new Date(tx.date).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" })}
-              </div>
-              <div className="w-20 flex justify-end">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${colorClass}`}>
-                  {typeLabels[tx.type]}
-                </span>
-              </div>
-              <div className={`w-32 text-right font-bold ${tx.amount > 0 ? "text-emerald-400" : "text-white"}`}>
-                {tx.amount > 0 ? "+" : ""}{fmtRub(Math.abs(tx.amount))}
-              </div>
-            </div>
-          );
-        })}
-        {filtered.length === 0 && (
-          <div className="py-12 text-center text-[#4A4469] text-sm">Нет транзакций</div>
-        )}
+            );
+          })}
+
+        {!isLoading && filtered.length === 0 && <div className="py-12 text-center text-sm text-[#747D8C]">Нет транзакций</div>}
       </div>
+    </div>
+  );
+}
+
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  accent = false,
+}: {
+  icon: typeof Wallet;
+  label: string;
+  value: string;
+  sub: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className={`rounded-lg border p-5 ${accent ? "border-[#4B8BFF]/30 bg-[#4B8BFF]/10" : "border-[#202633] bg-[#10141D]"}`}>
+      <div className="mb-4 flex items-center gap-2">
+        <Icon size={18} className={accent ? "text-[#8BB4FF]" : "text-[#8B93A3]"} />
+        <span className="text-sm text-[#B5BCC9]">{label}</span>
+      </div>
+      <div className="mb-1 text-3xl font-semibold text-white">{value}</div>
+      <div className="text-sm text-[#8B93A3]">{sub}</div>
+      {accent && (
+        <div className="mt-4 flex items-center gap-1 border-t border-[#4B8BFF]/20 pt-4 text-xs font-medium text-[#8BB4FF]">
+          <TrendingUp size={12} />
+          доступно для планирования выплат
+        </div>
+      )}
     </div>
   );
 }

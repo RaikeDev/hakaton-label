@@ -15,7 +15,10 @@ export function usePayments() {
 
   const approveMutation = useMutation({
     mutationFn: approvePayment,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["payments"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["payments"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 
   const markPaidMutation = useMutation({

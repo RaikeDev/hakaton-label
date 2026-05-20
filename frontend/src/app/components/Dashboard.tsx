@@ -1,32 +1,28 @@
-﻿import {
-  TrendingUp,
-  TrendingDown,
-  Music2,
-  Wallet,
-  PlayCircle,
-  ArrowRight,
-  Clock,
-  CheckCircle,
+import type { ElementType, ReactNode } from "react";
+import {
   AlertCircle,
-  Headphones,
+  ArrowRight,
+  CheckCircle,
+  Clock,
+  Music2,
+  PlayCircle,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
 } from "lucide-react";
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import { useDashboard } from "../../hooks/useDashboard";
-
-function fmt(n: number) {
-  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(n);
-}
 
 function fmtRub(n: number) {
   return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(n);
@@ -38,57 +34,70 @@ function fmtStreams(n: number) {
   return String(n);
 }
 
-const PLATFORM_COLORS = ["#FFCC00", "#4F8DFF", "#1DB954", "#21A038", "#E42313", "#FC3C44"];
-const PLATFORM_NAMES: Record<string, string> = { yandex: "Яндекс", vk: "VK", spotify: "Spotify", sber: "Звук", mts: "МТС", apple: "Apple" };
+const PLATFORM_COLORS = ["#EAB308", "#4B8BFF", "#22C55E", "#14B8A6", "#EF4444", "#F97316"];
+const PLATFORM_NAMES: Record<string, string> = {
+  yandex: "Яндекс",
+  vk: "VK",
+  spotify: "Spotify",
+  sber: "Звук",
+  mts: "МТС",
+  apple: "Apple",
+};
 
-function StatCard({ label, value, sub, trend, icon: Icon, accent = false }: {
+function StatCard({
+  label,
+  value,
+  sub,
+  trend,
+  icon: Icon,
+  accent = false,
+}: {
   label: string;
   value: string;
   sub?: string;
   trend?: number;
-  icon: React.ElementType;
+  icon: ElementType;
   accent?: boolean;
 }) {
   return (
-    <div className={`rounded-2xl p-5 border ${accent ? "bg-amber-500/8 border-amber-400/25" : "bg-[#0F0D22] border-[#1C1A3B]"}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${accent ? "bg-amber-500/20" : "bg-[#130F2E]"}`}>
-          <Icon size={18} className={accent ? "text-amber-300" : "text-[#9B98BC]"} />
+    <div className={`rounded-lg border p-5 ${accent ? "border-[#4B8BFF]/30 bg-[#4B8BFF]/10" : "border-[#202633] bg-[#10141D]"}`}>
+      <div className="mb-3 flex items-start justify-between">
+        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#151B26]">
+          <Icon size={18} className={accent ? "text-[#8BB4FF]" : "text-[#8B93A3]"} />
         </div>
         {trend !== undefined && (
-          <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${trend >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+          <div className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${trend >= 0 ? "bg-emerald-400/10 text-emerald-300" : "bg-red-400/10 text-red-300"}`}>
             {trend >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
             {Math.abs(trend)}%
           </div>
         )}
       </div>
-      <div className={`text-2xl font-bold mb-1 ${accent ? "text-amber-300" : "text-white"}`}>{value}</div>
-      <div className="text-[#6C6890] text-sm">{label}</div>
-      {sub && <div className="text-[#4A4469] text-xs mt-1">{sub}</div>}
+      <div className="mb-1 text-2xl font-semibold text-white">{value}</div>
+      <div className="text-sm text-[#B5BCC9]">{label}</div>
+      {sub && <div className="mt-1 text-xs text-[#8B93A3]">{sub}</div>}
     </div>
   );
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#130F2E] border border-[#252356] rounded-xl px-4 py-3 shadow-xl text-xs">
-        <div className="text-[#9B98BC] mb-2">{label}</div>
-        {payload.map((p: any) => (
-          <div key={p.dataKey} className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
-            <span className="text-[#9B98BC]">{p.name}:</span>
-            <span className="text-white font-semibold">{fmtRub(p.value)}</span>
-          </div>
-        ))}
-        <div className="border-t border-[#252356] mt-2 pt-2 flex justify-between">
-          <span className="text-[#6C6890]">Итого</span>
-          <span className="text-white font-bold">{fmtRub(payload.reduce((a: number, p: any) => a + p.value, 0))}</span>
+  if (!active || !payload?.length) return null;
+
+  return (
+    <div className="rounded-md border border-[#2A3242] bg-[#111722] px-4 py-3 text-xs shadow-xl">
+      <div className="mb-2 text-[#8B93A3]">{label}</div>
+      {payload.map((p: any) => (
+        <div key={p.dataKey} className="mb-1 flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
+          <span className="text-[#B5BCC9]">{p.name}:</span>
+          <span className="font-semibold text-white">{fmtRub(p.value)}</span>
         </div>
+      ))}
+      <div className="mt-2 flex justify-between border-t border-[#2A3242] pt-2">
+        <span className="text-[#8B93A3]">Итого</span>
+        <span className="font-semibold text-white">{fmtRub(payload.reduce((a: number, p: any) => a + p.value, 0))}</span>
       </div>
-    );
-  }
-  return null;
+    </div>
+  );
 };
 
 export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }) {
@@ -96,10 +105,10 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-[#6C6890] text-sm">Загружаем данные...</p>
+          <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[#4B8BFF] border-t-transparent" />
+          <p className="text-sm text-[#8B93A3]">Загружаем данные...</p>
         </div>
       </div>
     );
@@ -107,10 +116,10 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
 
   if (isError || !data) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <p className="text-red-400 font-medium mb-2">Не удалось загрузить дашборд</p>
-          <p className="text-[#6C6890] text-sm">Проверьте, что backend запущен на порту 8000</p>
+          <p className="mb-2 font-medium text-red-300">Не удалось загрузить дашборд</p>
+          <p className="text-sm text-[#8B93A3]">Проверьте, что backend запущен на порту 8000</p>
         </div>
       </div>
     );
@@ -121,78 +130,44 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
   const monthlyRevenue: any[] = data.monthly_revenue ?? [];
   const topTracks: any[] = data.top_tracks ?? [];
   const recentTx: any[] = data.recent_transactions?.slice(0, 4) ?? [];
-  const approvals: any[] = [];
 
   const pieKeys = ["yandex", "vk", "spotify", "sber", "mts", "apple"];
   const lastMonth = monthlyRevenue[monthlyRevenue.length - 1] ?? {};
   const pieData = pieKeys
     .map((code, i) => ({ name: PLATFORM_NAMES[code] ?? code, value: lastMonth[code] ?? 0, color: PLATFORM_COLORS[i] }))
-    .filter((d) => d.value > 0);
-
-  const approvalColors: Record<string, string> = {
-    in_review: "text-amber-400 bg-amber-400/10",
-    approved: "text-emerald-400 bg-emerald-400/10",
-    changes_requested: "text-red-400 bg-red-400/10",
-  };
-  const approvalLabels: Record<string, string> = {
-    in_review: "В работе",
-    approved: "Одобрено",
-    changes_requested: "Правки",
-  };
+    .filter((item) => item.value > 0);
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
+    <div className="flex-1 space-y-6 overflow-y-auto p-6">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-[#6C6890] text-sm mb-1">Добро пожаловать назад,</div>
-          <h1 className="text-2xl font-bold text-white">
-            {artist.name}{artist.real_name && <span className="text-[#6C6890] font-normal"> / {artist.real_name}</span>}
+          <div className="mb-1 text-sm text-[#8B93A3]">Обзор артиста</div>
+          <h1 className="text-2xl font-semibold text-white">
+            {artist.name}
+            {artist.real_name && <span className="font-normal text-[#8B93A3]"> / {artist.real_name}</span>}
           </h1>
         </div>
-        <div className="text-right">
-          <div className="text-[#9B98BC] text-sm mt-0.5">Данные из базы в реальном времени</div>
+        <div className="rounded-md border border-[#202633] bg-[#10141D] px-4 py-2 text-right">
+          <div className="text-xs text-[#8B93A3]">Источник данных</div>
+          <div className="text-sm font-medium text-white">База в реальном времени</div>
         </div>
       </div>
 
-      {/* Stat cards */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard
-          label="Прослушиваний всего"
-          value={fmtStreams(summary.total_streams)}
-          sub="За всё время"
-          icon={PlayCircle}
-          accent
-        />
-        <StatCard
-          label="Доход за период"
-          value={fmtRub(summary.period_revenue)}
-          sub={monthlyRevenue.length > 0 ? `Период: ${lastMonth.month}` : "Все периоды"}
-          icon={TrendingUp}
-        />
-        <StatCard
-          label="Баланс"
-          value={fmtRub(artist.balance)}
-          sub={`К выплате: ${fmtRub(artist.pending_payout)}`}
-          icon={Wallet}
-        />
-        <StatCard
-          label="Треков в каталоге"
-          value={String(summary.tracks_count)}
-          icon={Music2}
-        />
+        <StatCard label="Прослушиваний всего" value={fmtStreams(summary.total_streams)} sub="За все время" icon={PlayCircle} accent />
+        <StatCard label="Доход за период" value={fmtRub(summary.period_revenue)} sub={monthlyRevenue.length > 0 ? `Период: ${lastMonth.month}` : "Все периоды"} icon={TrendingUp} />
+        <StatCard label="Баланс" value={fmtRub(artist.balance)} sub={`К выплате: ${fmtRub(artist.pending_payout)}`} icon={Wallet} />
+        <StatCard label="Треков в каталоге" value={String(summary.tracks_count)} icon={Music2} />
       </div>
 
-      {/* Charts row */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Revenue area chart */}
-        <div className="col-span-2 bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
-          <div className="flex items-center justify-between mb-4">
+        <div className="col-span-2 rounded-lg border border-[#202633] bg-[#10141D] p-5">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-white font-semibold">Доход по платформам</h2>
-              <p className="text-[#6C6890] text-xs mt-0.5">По периодам · руб.</p>
+              <h2 className="font-semibold text-white">Доход по платформам</h2>
+              <p className="mt-0.5 text-xs text-[#8B93A3]">По периодам, руб.</p>
             </div>
-            <button onClick={() => onNavigate("analytics")} className="flex items-center gap-1 text-violet-400 text-xs hover:text-violet-300 transition-colors">
+            <button onClick={() => onNavigate("analytics")} className="flex items-center gap-1 text-xs font-medium text-[#6FA1FF] transition-colors hover:text-[#8BB4FF]">
               Подробнее <ArrowRight size={12} />
             </button>
           </div>
@@ -203,38 +178,37 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                   <defs>
                     {["yandex", "vk", "spotify"].map((code, i) => (
                       <linearGradient key={code} id={`grad-${code}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={PLATFORM_COLORS[i]} stopOpacity={0.25} />
+                        <stop offset="5%" stopColor={PLATFORM_COLORS[i]} stopOpacity={0.22} />
                         <stop offset="95%" stopColor={PLATFORM_COLORS[i]} stopOpacity={0} />
                       </linearGradient>
                     ))}
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1C1A3B" />
-                  <XAxis dataKey="month" tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#6C6890", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#202633" />
+                  <XAxis dataKey="month" tick={{ fill: "#747D8C", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#747D8C", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey="yandex" name="Яндекс" stroke={PLATFORM_COLORS[0]} fill="url(#grad-yandex)" strokeWidth={2} dot={false} />
                   <Area type="monotone" dataKey="vk" name="VK" stroke={PLATFORM_COLORS[1]} fill="url(#grad-vk)" strokeWidth={2} dot={false} />
                   <Area type="monotone" dataKey="spotify" name="Spotify" stroke={PLATFORM_COLORS[2]} fill="url(#grad-spotify)" strokeWidth={2} dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
-              <div className="flex gap-4 mt-3">
+              <div className="mt-3 flex gap-4">
                 {["Яндекс", "VK", "Spotify"].map((name, i) => (
                   <div key={name} className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full" style={{ background: PLATFORM_COLORS[i] }} />
-                    <span className="text-[#6C6890] text-xs">{name}</span>
+                    <span className="h-2 w-2 rounded-full" style={{ background: PLATFORM_COLORS[i] }} />
+                    <span className="text-xs text-[#8B93A3]">{name}</span>
                   </div>
                 ))}
               </div>
             </>
           ) : (
-            <div className="h-[200px] flex items-center justify-center text-[#4A4469] text-sm">Нет данных по периодам</div>
+            <div className="flex h-[200px] items-center justify-center text-sm text-[#747D8C]">Нет данных по периодам</div>
           )}
         </div>
 
-        {/* Platform pie */}
-        <div className="bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
-          <h2 className="text-white font-semibold mb-1">Разбивка по платформам</h2>
-          <p className="text-[#6C6890] text-xs mb-4">По доходу за последний период</p>
+        <div className="rounded-lg border border-[#202633] bg-[#10141D] p-5">
+          <h2 className="mb-1 font-semibold text-white">Платформы</h2>
+          <p className="mb-4 text-xs text-[#8B93A3]">Доход за последний период</p>
           {pieData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={140}>
@@ -244,107 +218,127 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                       <Cell key={i} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => fmtRub(v)} contentStyle={{ background: "#130F2E", border: "1px solid #252356", borderRadius: 10, fontSize: 12 }} />
+                  <Tooltip formatter={(v: number) => fmtRub(v)} contentStyle={{ background: "#111722", border: "1px solid #2A3242", borderRadius: 8, fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="space-y-1.5 mt-2">
-                {pieData.slice(0, 4).map((d, i) => {
-                  const totalV = pieData.reduce((a, x) => a + x.value, 0);
-                  const pct = totalV > 0 ? ((d.value / totalV) * 100).toFixed(1) : "0";
+              <div className="mt-2 space-y-1.5">
+                {pieData.slice(0, 4).map((item, i) => {
+                  const total = pieData.reduce((a, x) => a + x.value, 0);
+                  const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0";
                   return (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
-                        <span className="text-[#9B98BC] text-xs">{d.name}</span>
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: item.color }} />
+                        <span className="text-xs text-[#B5BCC9]">{item.name}</span>
                       </div>
-                      <span className="text-white text-xs font-semibold">{pct}%</span>
+                      <span className="text-xs font-semibold text-white">{pct}%</span>
                     </div>
                   );
                 })}
               </div>
             </>
           ) : (
-            <div className="h-[140px] flex items-center justify-center text-[#4A4469] text-sm">Нет данных</div>
+            <div className="flex h-[140px] items-center justify-center text-sm text-[#747D8C]">Нет данных</div>
           )}
         </div>
       </div>
 
-      {/* Bottom row */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Top tracks */}
-        <div className="col-span-2 bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white font-semibold">Топ треков</h2>
-            <button onClick={() => onNavigate("catalog")} className="flex items-center gap-1 text-violet-400 text-xs hover:text-violet-300 transition-colors">
+        <div className="col-span-2 rounded-lg border border-[#202633] bg-[#10141D] p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-semibold text-white">Топ треков</h2>
+            <button onClick={() => onNavigate("catalog")} className="flex items-center gap-1 text-xs font-medium text-[#6FA1FF] transition-colors hover:text-[#8BB4FF]">
               Все треки <ArrowRight size={12} />
             </button>
           </div>
           {topTracks.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-1">
               {topTracks.map((track: any, idx: number) => (
-                <div key={track.id} className="flex items-center gap-3 group hover:bg-[#130F2E] rounded-xl p-2 -mx-2 transition-colors">
-                  <span className="text-[#4A4469] text-sm font-mono w-5 text-center shrink-0">{idx + 1}</span>
+                <div key={track.id} className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-[#151B26]">
+                  <span className="w-5 shrink-0 text-center font-mono text-sm text-[#747D8C]">{idx + 1}</span>
                   <img
                     src={track.cover_url ?? ""}
                     alt={track.title}
-                    className="w-9 h-9 rounded-lg object-cover shrink-0"
-                    onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(track.title)}&background=7C3AED&color=fff&size=36`; }}
+                    className="h-9 w-9 shrink-0 rounded-md object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(track.title)}&background=151B26&color=fff&size=36`;
+                    }}
                   />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-sm font-medium truncate">{track.title}</div>
-                    <div className="text-[#6C6890] text-xs">{track.isrc ?? "—"}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-white">{track.title}</div>
+                    <div className="text-xs text-[#747D8C]">{track.isrc ?? "-"}</div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-white text-sm font-semibold">{fmtStreams(track.streams)}</div>
-                    <div className="text-emerald-400 text-xs">{fmtRub(track.revenue)}</div>
+                  <div className="shrink-0 text-right">
+                    <div className="text-sm font-semibold text-white">{fmtStreams(track.streams)}</div>
+                    <div className="text-xs text-emerald-300">{fmtRub(track.revenue)}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-[#4A4469] text-sm text-center py-8">Треки не найдены</div>
+            <div className="py-8 text-center text-sm text-[#747D8C]">Треки не найдены</div>
           )}
         </div>
 
-        {/* Right column */}
         <div className="space-y-4">
-          {/* Recent activity */}
-          <div className="bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-white font-semibold">Последние операции</h2>
-              <button onClick={() => onNavigate("balance")} className="text-violet-400 text-xs hover:text-violet-300 transition-colors">
-                Все
-              </button>
-            </div>
+          <SidePanel title="Последние операции" action="Все" onAction={() => onNavigate("balance")}>
             {recentTx.length > 0 ? (
               <div className="space-y-3">
                 {recentTx.map((tx: any) => (
                   <div key={tx.id} className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[#9B98BC] text-xs leading-snug truncate">{tx.description}</div>
-                      <div className="text-[#4A4469] text-xs mt-0.5">{new Date(tx.date).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-xs leading-snug text-[#B5BCC9]">{tx.description}</div>
+                      <div className="mt-0.5 text-xs text-[#747D8C]">{new Date(tx.date).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}</div>
                     </div>
-                    <div className={`text-sm font-semibold shrink-0 ${tx.amount > 0 ? "text-emerald-400" : "text-white"}`}>
-                      {tx.amount > 0 ? "+" : ""}{fmtRub(Math.abs(tx.amount))}
+                    <div className={`shrink-0 text-sm font-semibold ${tx.amount > 0 ? "text-emerald-300" : "text-white"}`}>
+                      {tx.amount > 0 ? "+" : ""}
+                      {fmtRub(Math.abs(tx.amount))}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-[#4A4469] text-sm text-center py-4">Нет операций</div>
+              <div className="py-4 text-center text-sm text-[#747D8C]">Нет операций</div>
             )}
-          </div>
+          </SidePanel>
 
-          {/* Approvals placeholder */}
-          <div className="bg-[#0F0D22] rounded-2xl p-5 border border-[#1C1A3B]">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-white font-semibold">Согласования</h2>
-              <button onClick={() => onNavigate("approvals")} className="text-violet-400 text-xs hover:text-violet-300 transition-colors">Все</button>
+          <SidePanel title="Согласования" action="Все" onAction={() => onNavigate("approvals")}>
+            <div className="space-y-3">
+              <StatusLine icon={Clock} label="В работе" value="0" tone="amber" />
+              <StatusLine icon={CheckCircle} label="Одобрено" value="0" tone="green" />
+              <StatusLine icon={AlertCircle} label="Требуют внимания" value="0" tone="red" />
             </div>
-            <p className="text-[#4A4469] text-xs text-center py-2">Перейдите в раздел «Согласования»</p>
-          </div>
+          </SidePanel>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SidePanel({ title, action, onAction, children }: { title: string; action: string; onAction: () => void; children: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-[#202633] bg-[#10141D] p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-semibold text-white">{title}</h2>
+        <button onClick={onAction} className="text-xs font-medium text-[#6FA1FF] transition-colors hover:text-[#8BB4FF]">
+          {action}
+        </button>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function StatusLine({ icon: Icon, label, value, tone }: { icon: ElementType; label: string; value: string; tone: "amber" | "green" | "red" }) {
+  const color = tone === "green" ? "text-emerald-300" : tone === "red" ? "text-red-300" : "text-amber-300";
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 text-sm text-[#B5BCC9]">
+        <Icon size={14} className={color} />
+        {label}
+      </div>
+      <span className="font-semibold text-white">{value}</span>
     </div>
   );
 }

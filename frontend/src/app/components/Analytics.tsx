@@ -8,10 +8,8 @@
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
 } from "recharts";
+import { useState } from "react";
 import { TrendingUp, TrendingDown, Globe, Users, Radio } from "lucide-react";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { useDashboard } from "../../hooks/useDashboard";
@@ -24,6 +22,14 @@ function fmtStreams(n: number) {
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return String(n);
 }
+
+type PeriodFilter = "last" | "quarter" | "all";
+
+const periodOptions: Array<{ id: PeriodFilter; label: string }> = [
+  { id: "last", label: "Последний период" },
+  { id: "quarter", label: "3 периода" },
+  { id: "all", label: "Все периоды" },
+];
 
 const PLATFORM_COLORS: Record<string, string> = {
   yandex: "#FFCC00", vk: "#4F8DFF", spotify: "#1DB954", sber: "#21A038", mts: "#E42313", apple: "#FC3C44",
@@ -55,9 +61,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function Analytics() {
+  const [period, setPeriod] = useState<PeriodFilter>("quarter");
   const { data: analyticsData, isLoading } = useAnalytics();
   const { data: dashData } = useDashboard();
-  const monthlyRevenue: any[] = dashData?.monthly_revenue ?? [];
+  const allMonths: any[] = dashData?.monthly_revenue ?? [];
+  const monthlyRevenue = period === "last" ? allMonths.slice(-1) : period === "quarter" ? allMonths.slice(-3) : allMonths;
+  const periodLabel = periodOptions.find((option) => option.id === period)?.label ?? "3 периода";
 
   const streamsByPlatform: any[] = (analyticsData?.platforms ?? []).map((p: any, i: number) => ({
     name: p.platform,
@@ -71,9 +80,24 @@ export function Analytics() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-white">Аналитика</h1>
-        <p className="text-[#8B93A3] text-sm mt-1">Данные по всем платформам · Февраль 2025</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-white">Аналитика</h1>
+          <p className="text-[#8B93A3] text-sm mt-1">Данные по всем платформам · {periodLabel.toLowerCase()}</p>
+        </div>
+        <div className="flex rounded-md border border-[#2A3242] bg-[#111722] p-1">
+          {periodOptions.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setPeriod(option.id)}
+              className={`h-8 rounded px-3 text-xs font-medium transition-colors ${
+                period === option.id ? "bg-[#2F6FED] text-white" : "text-[#8B93A3] hover:text-white"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* KPI row */}

@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useState } from "react";
 import { TrendingUp, TrendingDown, Globe, Users, Radio } from "lucide-react";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { useDashboard } from "../../hooks/useDashboard";
@@ -22,6 +23,14 @@ function fmtStreams(n: number) {
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return String(n);
 }
+
+type PeriodFilter = "last" | "quarter" | "all";
+
+const periodOptions: Array<{ id: PeriodFilter; label: string }> = [
+  { id: "last", label: "Последний период" },
+  { id: "quarter", label: "3 периода" },
+  { id: "all", label: "Все периоды" },
+];
 
 const PLATFORM_COLORS: Record<string, string> = {
   yandex: "#FFCC00", vk: "#4F8DFF", spotify: "#1DB954", sber: "#21A038", mts: "#E42313", apple: "#FC3C44",
@@ -53,9 +62,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function Analytics() {
-  const [period, setPeriod] = useState<7 | 30 | 90>(30);
+  const [period, setPeriod] = useState<PeriodFilter>("quarter");
   const { data: analyticsData, isLoading } = useAnalytics();
   const { data: dashData } = useDashboard();
+  const allMonths: any[] = dashData?.monthly_revenue ?? [];
+  const monthlyRevenue = period === "last" ? allMonths.slice(-1) : period === "quarter" ? allMonths.slice(-3) : allMonths;
+  const periodLabel = periodOptions.find((option) => option.id === period)?.label ?? "3 периода";
 
   const allMonths: any[] = dashData?.monthly_revenue ?? [];
   const monthlyRevenue = period === 90 ? allMonths : period === 30 ? allMonths.slice(-3) : allMonths.slice(-1);
@@ -72,33 +84,24 @@ export function Analytics() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-      {/* Header + Period filter */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white">Аналитика</h1>
-          <p className="text-[#6C6890] text-sm mt-0.5">
-            Данные по всем платформам · последние {period === 90 ? "3 месяца" : `${period} дней`}
-          </p>
+          <h1 className="text-xl font-semibold text-white">Аналитика</h1>
+          <p className="text-[#8B93A3] text-sm mt-1">Данные по всем платформам · {periodLabel.toLowerCase()}</p>
         </div>
-        <div className="flex items-center gap-2">
-          {([7, 30, 90] as const).map((p) => (
+        <div className="flex rounded-md border border-[#2A3242] bg-[#111722] p-1">
+          {periodOptions.map((option) => (
             <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                period === p
-                  ? "bg-violet-600 text-white"
-                  : "bg-[#0F0D22] border border-[#1C1A3B] text-[#6C6890] hover:text-white"
+              key={option.id}
+              onClick={() => setPeriod(option.id)}
+              className={`h-8 rounded px-3 text-xs font-medium transition-colors ${
+                period === option.id ? "bg-[#2F6FED] text-white" : "text-[#8B93A3] hover:text-white"
               }`}
             >
-              {p === 7 ? "7 дней" : p === 30 ? "30 дней" : "3 месяца"}
+              {option.label}
             </button>
           ))}
         </div>
-      <div>
-        <h1 className="text-xl font-semibold text-white">Аналитика</h1>
-        <p className="text-[#8B93A3] text-sm mt-1">Данные по всем платформам · Февраль 2025</p>
       </div>
 
       {/* KPI row */}
@@ -266,6 +269,21 @@ export function Analytics() {
           </table>
         </div>
       </div>
+      {/* DataLens Dashboard */}
+{import.meta.env.VITE_DATALENS_URL && (
+  <div className="bg-[#10141D] border border-[#202633] rounded-lg p-5">
+    <h2 className="text-white font-semibold mb-1">DataLens — расширенная аналитика</h2>
+    <p className="text-[#8B93A3] text-xs mb-4">Интерактивные дашборды Yandex DataLens</p>
+    <iframe
+      src={import.meta.env.VITE_DATALENS_URL}
+      width="100%"
+      height="650"
+      frameBorder="0"
+      style={{ borderRadius: "10px" }}
+      allowFullScreen
+    />
+  </div>
+)}
     </div>
   );
 }
